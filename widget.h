@@ -24,13 +24,17 @@ public:
     ~Widget();
 private:
     Ui::Widget *ui;
-    ParticipantsWidget *pw;
+	ParticipantsWidget *participantsWidget;
+	void addToParticipantsWidget();
     const char* appName = "Etkinlik Kayıt Programı";
     QFile activityListFile, participantListFile, logFile;
     QStringListModel *modelFromFile(QFile &file);
     QCompleter* completer = nullptr;
     QStatusBar* statusBar;
 //    UpdateController update;
+	void getParticipantsFromFile(QFile &file);
+	QStringListModel* stringListModel;
+	QStringList participantList;
     void addToFile(QFile &file, QComboBox *comboBox);
     void startCompleter(QFile &file, QComboBox *comboBox);
     void openFile(QFile& file, const char* fileName, QIODevice::OpenModeFlag omf);

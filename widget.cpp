@@ -25,8 +25,8 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget)
     openFile(logFile, "logs.txt", QIODevice::ReadWrite);
     openFile(participantListFile, "katilimcilar.txt", QIODevice::ReadWrite);
 
-    pw = new ParticipantsWidget;
-    pw->show();
+	getParticipantsFromFile(participantListFile);
+
 //    update.setApiUrl("https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest"); // TODO change it!
 //    update.setVersionFileName(applicationDirPath + "/version.txt");
 //    update.setAppName(appName);
@@ -51,13 +51,22 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget)
     startCompleter(activityListFile, ui->etkinlikComboBox);
     startCompleter(participantListFile, ui->adSoyadComboBox);
 
+	participantsWidget = new ParticipantsWidget(participantList);
+	participantsWidget->addItem();
+	participantsWidget->show();
+
     ui->etkinlikComboBox->setCurrentIndex(-1);
     ui->adSoyadComboBox->setCurrentIndex(-1);
 }
 
 Widget::~Widget()
 {
-    delete ui;
+	delete ui;
+}
+
+void Widget::addToParticipantsWidget()
+{
+	participantsWidget->addItem();
 }
 QStringListModel *Widget::modelFromFile(QFile& file)
 {
@@ -75,45 +84,59 @@ QStringListModel *Widget::modelFromFile(QFile& file)
 #ifndef QT_NO_CURSOR
     QGuiApplication::restoreOverrideCursor();
 #endif
-    return new QStringListModel(words, completer);
+	return new QStringListModel(words, completer);
+}
+
+void Widget::getParticipantsFromFile(QFile& file)
+{
+	stringListModel = modelFromFile(file);
+	participantList = stringListModel->stringList();
 }
 
 void Widget::addToFile(QFile& file, QComboBox* comboBox)
 {
     QTextStream stream(&file);
+	QMessageBox qmbox;
     if (file.fileName() == participantListFile.fileName())
     {
         auto categories = ui->yasKategoriGroupBox->findChildren<QRadioButton*>();
-        auto checkedButton = std::find_if(std::cbegin(categories), std::cend(categories), [](const auto&button){return button->isChecked();});
+		auto checkedButtonIter = std::find_if(std::cbegin(categories), std::cend(categories), [](const auto&button){return button->isChecked();});
+		auto checkedButton = *checkedButtonIter;
         if(comboBox->currentText().isEmpty())
         {
-            QMessageBox qmbox;
             qmbox.warning(nullptr, tr(appName), "Kişi ismi girilmemiş!");
             return;
         }
-        else if (checkedButton == categories.cend())
+		else if (checkedButtonIter == categories.cend())
         {
-            QMessageBox qmbox;
             qmbox.warning(nullptr, tr(appName), QString("%1 için yaş kategorisi seçilmemiş!").arg(comboBox->currentText()));
             return;
         }
-        else
-        {
-            statusBar->showMessage(QString("\"%1\" kategorisindeki \"%2\" kaydedildi").arg((*checkedButton)->text(), comboBox->currentText()));
-            stream << comboBox->currentText() << " (" << (*checkedButton)->text() << ")\n";
-        }
-        (*checkedButton)->setAutoExclusive(false);
-        (*checkedButton)->setChecked(false);
-        (*checkedButton)->setAutoExclusive(true);
+
+		statusBar->showMessage(QString("\"%1\" kategorisindeki \"%2\" kaydedildi").arg(checkedButton->text(), comboBox->currentText()));
+		stream << comboBox->currentText() << " (" << checkedButton->text() << ")\n";
+
+		checkedButton->setAutoExclusive(false);
+		checkedButton->setChecked(false);
+		checkedButton->setAutoExclusive(true);
     }
     else
     {
+		if(comboBox->currentText().isEmpty())
+		{
+			qmbox.warning(nullptr, tr(appName), "Etkinlik ismi girilmemiş!");
+			return;
+		}
         statusBar->showMessage(QString("\"%1\" kaydedildi").arg(comboBox->currentText()));
         stream << comboBox->currentText() << '\n';
     }
     stream.flush();
-    comboBox->clearEditText();
-    startCompleter(file, comboBox);
+	startCompleter(file, comboBox);
+//	participantList.append(comboBox->currentText());
+//	stringListModel->setStringList(participantList);
+//	completer->setModel(stringListModel);
+
+	comboBox->clearEditText();
 }
 void Widget::startCompleter(QFile& file, QComboBox* comboBox)
 {
@@ -123,10 +146,12 @@ void Widget::startCompleter(QFile& file, QComboBox* comboBox)
     completer->setMaxVisibleItems(10);
     completer->setWrapAround(true);     // bunun ne işe yaradığını anlamadım
 
-    QStringListModel* stringListModel = modelFromFile(file);
+//    QStringListModel* stringListModel = modelFromFile(file);
+	getParticipantsFromFile(file);
     completer->setModel(stringListModel);
 
-    comboBox->addItems(stringListModel->stringList());
+//    comboBox->addItems(stringListModel->stringList());
+	comboBox->addItems(participantList);
 
     delete comboBox->completer();
     comboBox->setCompleter(completer);
