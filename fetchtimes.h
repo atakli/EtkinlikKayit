@@ -3,6 +3,8 @@
 
 #include <QNetworkAccessManager>
 #include <QProgressDialog>
+#include <QNetworkReply>
+#include <QFile>
 #include <QUrl>
 
 QT_BEGIN_NAMESPACE
@@ -16,8 +18,6 @@ class HttpWindow : public QDialog
     Q_OBJECT
 public:
     explicit HttpWindow(QWidget *parent = nullptr);
-	~HttpWindow();
-    void startRequest(const QUrl &requestedUrl);
 	void downloadFile(const QString fileName, const QString urlSpec);
     void downloadSynchronous(QString fileName, QString urlSpec, const QString& downloadFileName);
 private slots:
@@ -30,6 +30,7 @@ private slots:
 private:
     std::unique_ptr<QFile> openFileForWrite(const QString &fileName);
 
+    void startRequest(const QUrl &requestedUrl);
 	QNetworkAccessManager qnam;
     QString zipName;
 	std::unique_ptr<QNetworkReply> reply;

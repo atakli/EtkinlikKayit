@@ -25,18 +25,20 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget)
     openFile(logFile, "logs.txt", QIODevice::ReadWrite);
     openFile(participantListFile, "katilimcilar.txt", QIODevice::ReadWrite);
 
-    update.setApiUrl("https://api.github.com/repos/atakli/PrayerReminder-Desktop/releases/latest"); // TODO change it!
-    update.setVersionFileName(applicationDirPath + "/version.txt");
-    update.setAppName(appName);
-    update.setApiPath(applicationDirPath + "/api.json");
-    update.setDownloadFileName("etkinlikKayit.zip");
-    update.isNewVersionAvailable();
+    pw = new ParticipantsWidget;
+    pw->show();
+//    update.setApiUrl("https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest"); // TODO change it!
+//    update.setVersionFileName(applicationDirPath + "/version.txt");
+//    update.setAppName(appName);
+//    update.setApiPath(applicationDirPath + "/api.json");
+//    update.setDownloadFileName("etkinlikKayit.zip");
+//    update.isNewVersionAvailable();
 
     connect(ui->etkinlikEklePushButton, &QPushButton::clicked, this, [this](){this->addToFile(activityListFile, ui->etkinlikComboBox);});
     connect(ui->kisiEklePushButton, &QPushButton::clicked, this, [this](){this->addToFile(participantListFile, ui->adSoyadComboBox);});
 
-    connect(ui->adSoyadComboBox, &QComboBox::highlighted, this, &Widget::highlightedIndex);
-    connect(ui->adSoyadComboBox, &QComboBox::textHighlighted, this, &Widget::highlightedString);
+//    connect(ui->adSoyadComboBox, &QComboBox::highlighted, this, &Widget::highlightedIndex);
+//    connect(ui->adSoyadComboBox, &QComboBox::textHighlighted, this, &Widget::highlightedString);
 
     ui->dateEdit->setDate(QDateTime::currentDateTime().date());
 
@@ -57,7 +59,7 @@ Widget::~Widget()
 {
     delete ui;
 }
-QAbstractItemModel *Widget::modelFromFile(QFile& file)
+QStringListModel *Widget::modelFromFile(QFile& file)
 {
 #ifndef QT_NO_CURSOR
     QGuiApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
@@ -121,15 +123,10 @@ void Widget::startCompleter(QFile& file, QComboBox* comboBox)
     completer->setMaxVisibleItems(10);
     completer->setWrapAround(true);     // bunun ne işe yaradığını anlamadım
 
-    QAbstractItemModel* abstractItemModel = modelFromFile(file);
-    completer->setModel(abstractItemModel);
+    QStringListModel* stringListModel = modelFromFile(file);
+    completer->setModel(stringListModel);
 
-//    QStringListModel list1 = static_cast<QStringListModel>(abstractItemModel);
-
-    QStringList list = static_cast<QStringListModel*>(abstractItemModel)->stringList();
-//    QStringListModel list1 = static_cast<QStringListModel>(abstractItemModel);
-//    QStringList list = list1.stringList();
-    comboBox->addItems(list);
+    comboBox->addItems(stringListModel->stringList());
 
     delete comboBox->completer();
     comboBox->setCompleter(completer);

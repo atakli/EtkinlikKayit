@@ -4,11 +4,13 @@
 #include <QWidget>
 #include <QFile>
 
+#include "participantswidget.h"
 #include "updatecontroller.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
 class QAbstractItemModel;
+class QStringListModel;
 class QCompleter;
 class QComboBox;
 class QStatusBar;
@@ -22,12 +24,13 @@ public:
     ~Widget();
 private:
     Ui::Widget *ui;
+    ParticipantsWidget *pw;
     const char* appName = "Etkinlik Kayıt Programı";
     QFile activityListFile, participantListFile, logFile;
-    QAbstractItemModel *modelFromFile(QFile &file);
+    QStringListModel *modelFromFile(QFile &file);
     QCompleter* completer = nullptr;
     QStatusBar* statusBar;
-    UpdateController update;
+//    UpdateController update;
     void addToFile(QFile &file, QComboBox *comboBox);
     void startCompleter(QFile &file, QComboBox *comboBox);
     void openFile(QFile& file, const char* fileName, QIODevice::OpenModeFlag omf);

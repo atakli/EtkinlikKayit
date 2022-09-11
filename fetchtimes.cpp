@@ -8,8 +8,6 @@
 
 HttpWindow::HttpWindow(QWidget *parent) : QDialog(parent)	{}
 
-HttpWindow::~HttpWindow() = default;	// TODO: bu nasıl bir saçmalıktır: default'u niye burda yazmışım, class definition'da yazayım diye oraya alıp burayı tamamen kaldırınca hata verdi.
-
 void HttpWindow::startRequest(const QUrl &requestedUrl)
 {
 	QNetworkRequest req = QNetworkRequest(requestedUrl);
