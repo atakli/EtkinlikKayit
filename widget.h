@@ -11,6 +11,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
 class QAbstractItemModel;
 class QStringListModel;
+class QRadioButton;
 class QCompleter;
 class QComboBox;
 class QStatusBar;
@@ -24,6 +25,7 @@ public:
     ~Widget();
 private:
     Ui::Widget *ui;
+    QRadioButton* checkedButton;
 	ParticipantsWidget *participantsWidget;
 	void addToParticipantsWidget();
     const char* appName = "Etkinlik Kayıt Programı";
@@ -31,13 +33,14 @@ private:
     QStringListModel *modelFromFile(QFile &file);
     QCompleter* completer = nullptr;
     QStatusBar* statusBar;
-//    UpdateController update;
+    UpdateController update;
 	void getParticipantsFromFile(QFile &file);
 	QStringListModel* stringListModel;
 	QStringList participantList;
     void addToFile(QFile &file, QComboBox *comboBox);
     void startCompleter(QFile &file, QComboBox *comboBox);
-    void openFile(QFile& file, const char* fileName, QIODevice::OpenModeFlag omf);
+    void openFile(QFile& file, const QString &fileName, QIODevice::OpenModeFlag omf);
+    void addActivity();
 private slots:
     void highlightedIndex(int index);
     void highlightedString(const QString &text);

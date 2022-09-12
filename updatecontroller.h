@@ -13,9 +13,9 @@ class UpdateController : public QObject
 public:
 	void isNewVersionAvailable();
 
-    void setApiUrl(const QString &newApiUrl);
     void setVersionFileName(const QString &newVersionFileName);
     void setAppName(const QString &newAppName);
+    void setApiUrl(const QString &newApiUrl);
     void setApiPath(const QString &newApiPath);
     void setDownloadFileName(const QString &newDownloadFileName);
 private:

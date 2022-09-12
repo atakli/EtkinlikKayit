@@ -27,18 +27,24 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget)
 
 	getParticipantsFromFile(participantListFile);
 
-//    update.setApiUrl("https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest"); // TODO change it!
-//    update.setVersionFileName(applicationDirPath + "/version.txt");
-//    update.setAppName(appName);
-//    update.setApiPath(applicationDirPath + "/api.json");
-//    update.setDownloadFileName("etkinlikKayit.zip");
-//    update.isNewVersionAvailable();
+    participantsWidget = new ParticipantsWidget(participantList);
+    participantsWidget->addItem();
+
+    update.setApiUrl("https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest"); // TODO change it!
+    update.setVersionFileName(applicationDirPath + "/version.txt");
+    update.setAppName(appName);
+    update.setApiPath(applicationDirPath + "/api.json");
+    update.setDownloadFileName("etkinlikKayit.zip");
+    update.isNewVersionAvailable();
 
     connect(ui->etkinlikEklePushButton, &QPushButton::clicked, this, [this](){this->addToFile(activityListFile, ui->etkinlikComboBox);});
     connect(ui->kisiEklePushButton, &QPushButton::clicked, this, [this](){this->addToFile(participantListFile, ui->adSoyadComboBox);});
+    connect(ui->katilimcilariGetirPushButton, &QPushButton::clicked, participantsWidget, &ParticipantsWidget::show);
 
 //    connect(ui->adSoyadComboBox, &QComboBox::highlighted, this, &Widget::highlightedIndex);
 //    connect(ui->adSoyadComboBox, &QComboBox::textHighlighted, this, &Widget::highlightedString);
+//    connect(ui->adSoyadComboBox, &QComboBox::textActivated, this, &Widget::highlightedString);
+//    connect(ui->adSoyadComboBox, &QComboBox::currentTextChanged, this, &Widget::highlightedString);
 
     ui->dateEdit->setDate(QDateTime::currentDateTime().date());
 
@@ -50,10 +56,6 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget)
 
     startCompleter(activityListFile, ui->etkinlikComboBox);
     startCompleter(participantListFile, ui->adSoyadComboBox);
-
-	participantsWidget = new ParticipantsWidget(participantList);
-	participantsWidget->addItem();
-	participantsWidget->show();
 
     ui->etkinlikComboBox->setCurrentIndex(-1);
     ui->adSoyadComboBox->setCurrentIndex(-1);
@@ -101,7 +103,7 @@ void Widget::addToFile(QFile& file, QComboBox* comboBox)
     {
         auto categories = ui->yasKategoriGroupBox->findChildren<QRadioButton*>();
 		auto checkedButtonIter = std::find_if(std::cbegin(categories), std::cend(categories), [](const auto&button){return button->isChecked();});
-		auto checkedButton = *checkedButtonIter;
+        checkedButton = *checkedButtonIter;
         if(comboBox->currentText().isEmpty())
         {
             qmbox.warning(nullptr, tr(appName), "Kişi ismi girilmemiş!");
@@ -157,7 +159,7 @@ void Widget::startCompleter(QFile& file, QComboBox* comboBox)
     comboBox->setCompleter(completer);
 }
 
-void Widget::openFile(QFile& file, const char* fileName, QIODevice::OpenModeFlag flag)
+void Widget::openFile(QFile& file, const QString& fileName, QIODevice::OpenModeFlag flag)
 {
     file.setFileName(fileName);
 
@@ -167,6 +169,19 @@ void Widget::openFile(QFile& file, const char* fileName, QIODevice::OpenModeFlag
         QMessageBox qmbox;
         qmbox.critical(nullptr, tr(appName), QString("%1 dosyası açılamadı!").arg(fileName));
     }
+}
+
+void Widget::addActivity()
+{
+    QString fileName = ui->etkinlikComboBox->currentText();
+    QString adSoyadComboBox = ui->adSoyadComboBox->currentText();
+    QString participantName = ui->adSoyadComboBox->currentText();
+//    QString category = ui->
+    QString date = ui->dateEdit->text();
+    QFile file(fileName);
+    openFile(file, fileName, QIODevice::ReadWrite);
+    QTextStream stream(&file);
+//    stream << comboBox->currentText() << " (" << checkedButton->text() << ")\n";
 }
 
 void Widget::highlightedIndex(int index)

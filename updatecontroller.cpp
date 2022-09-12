@@ -53,21 +53,24 @@ bool UpdateController::compareTagVersion(const QString& tag, QString currentTag)
 void UpdateController::isNewVersionAvailable()
 {
 //    const QString apiPath = applicationDirPath + "/api.json";
-//    apiUrl = "https://api.github.com/repos/atakli/PrayerReminder-Desktop/releases/latest";
+//    apiUrl = "https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest";
     fetchTimes.downloadSynchronous(apiPath, apiUrl, "");
+
+//    https://github.com/atakli/EtkinlikKayit/releases/latest/download/EtkinlikKayit.zip
 
     const QString saveData = openFile(apiPath);
 //	QJsonDocument loadDoc = QJsonDocument::fromVariant(saveData);
-	const QJsonDocument loadDoc = QJsonDocument::fromJson(QByteArray::fromStdString(saveData.toStdString()));
+    const QJsonDocument loadDoc = QJsonDocument::fromJson(QByteArray::fromStdString(saveData.toStdString()));
 
 //    const QString currentTag = dosyayiAc(Paths::applicationDirPath + "/namazVakitFiles/version.txt");
     const QString currentTag = openFile(versionFileName);
 	if(const QString tag = loadDoc["tag_name"].toString(); compareTagVersion(tag, currentTag))
-	{
+    {
         if (QMessageBox(QMessageBox::Question, appName, "Yeni sürüm bulundu\nİndirilelim mi?", QMessageBox::No | QMessageBox::Yes).exec() == QMessageBox::No)
 		{
 			return;
 		}
+//        fetchTimes.downloadSynchronous("", loadDoc["assets"][0]["browser_download_url"].toString(), downloadFileName); // ismi PrayerReminder.zip'dan başka bişey olursa diye // TODO: 0'da sıkıntı olabilir
         fetchTimes.downloadSynchronous("", loadDoc["assets"][0]["browser_download_url"].toString(), downloadFileName); // ismi PrayerReminder.zip'dan başka bişey olursa diye // TODO: 0'da sıkıntı olabilir
 //		fetchTimes.downloadSynchronous("", "https://github.com/atakli/PrayerReminder-Desktop/releases/latest/download/PrayerReminder-" + osName + ".zip");
 //        fetchTimes.downloadSynchronous("", "https://github.com/atakli/PrayerReminder-Desktop/releases/latest/download/PrayerReminder" + QString(".zip"));

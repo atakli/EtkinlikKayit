@@ -264,7 +264,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="kayitGetirPushButton">
+      <widget class="QPushButton" name="katilimcilariGetirPushButton">
        <property name="text">
         <string>Kayıtlı Kişileri Getir</string>
        </property>
