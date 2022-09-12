@@ -5,6 +5,7 @@ enum { NumColumn = 1, CoilsColumn = 0, HoldingColumn = 2, ColumnCount = 3/*, Row
 WriteRegisterModel::WriteRegisterModel(const QStringList& participantList, QObject *parent) : QAbstractTableModel(parent), m_coils(participantList.size(), false), participantList(participantList)//, m_holdingRegisters(RowCount, 0u)
 {
 	RowCount = participantList.size();
+//    connect(participantList, &QStringList::);
 }
 
 int WriteRegisterModel::rowCount(const QModelIndex &/*parent*/) const
@@ -77,16 +78,16 @@ bool WriteRegisterModel::setData(const QModelIndex &index, const QVariant &value
 		return true;
 	}
 
-//	if (index.column() == HoldingColumn && role == Qt::EditRole) // holding registers
-//	{
-//        bool result = false;
-//        quint16 newValue = value.toString().toUShort(&result, 16);
-//        if (result)
-//            m_holdingRegisters[index.row()] = newValue;
+    /*if (index.column() == HoldingColumn && role == Qt::EditRole) // holding registers
+    {
+        bool result = false;
+        quint16 newValue = value.toString().toUShort(&result, 16);
+        if (result)
+            m_holdingRegisters[index.row()] = newValue;
 
-//        emit dataChanged(index, index);
-//        return result;
-//    }
+        emit dataChanged(index, index);
+        return result;
+    }*/
 
     return false;
 }
@@ -102,10 +103,29 @@ Qt::ItemFlags WriteRegisterModel::flags(const QModelIndex &index) const
 
     if (index.column() == CoilsColumn) // coils
         return flags | Qt::ItemIsUserCheckable;
-    if (index.column() == HoldingColumn) // holding registers
-        return flags | Qt::ItemIsEditable;
+//    if (index.column() == HoldingColumn) // holding registers
+//        return flags | Qt::ItemIsEditable;
 
     return flags;
+}
+
+void WriteRegisterModel::updateParticipantList()
+{
+    RowCount = participantList.size();
+    insertRow(RowCount);
+}
+
+void WriteRegisterModel::setParticipantList(const QStringList &newParticipantList)
+{
+    participantList = newParticipantList;
+}
+
+bool WriteRegisterModel::insertRows(int row, int count, const QModelIndex &parent)
+{
+    beginInsertRows(QModelIndex(), row, row + count - 1);
+    RowCount += count;
+    endInsertRows();
+    return true;
 }
 
 void WriteRegisterModel::setStartAddress(int address)

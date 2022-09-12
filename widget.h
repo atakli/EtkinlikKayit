@@ -27,7 +27,7 @@ private:
     Ui::Widget *ui;
     QRadioButton* checkedButton;
 	ParticipantsWidget *participantsWidget;
-	void addToParticipantsWidget();
+    void addToParticipantsWidget(const QString &participant);
     const char* appName = "Etkinlik Kayıt Programı";
     QFile activityListFile, participantListFile, logFile;
     QStringListModel *modelFromFile(QFile &file);

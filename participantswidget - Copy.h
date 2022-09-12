@@ -11,16 +11,14 @@ class ParticipantsWidget : public QWidget
 {
     Q_OBJECT
 public:
-    ParticipantsWidget(const QStringList& participantList, QWidget* parent = nullptr);
-    void addItem(const QString& participant);
-    void addItems(const QStringList& participants);
+	ParticipantsWidget(const QStringList& participantList, QWidget* parent = nullptr);
+    //	void addItem();
     void setParticipantList(const QStringList &newParticipantList);
 
 private:
-    int rowIndex = 0;
     Ui::Form *ui;
 	QStringList participantList;
-//    bool setHead
+	WriteRegisterModel *writeModel = nullptr;
 signals:
     void participantListUpdated();
 };

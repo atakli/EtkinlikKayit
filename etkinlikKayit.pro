@@ -17,15 +17,13 @@ SOURCES += \
     participantswidget.cpp \
     widget.cpp \
     updatecontroller.cpp \
-    fetchtimes.cpp  \
-    writeregistermodel.cpp
+    fetchtimes.cpp
 
 HEADERS += \
     participantswidget.h \
     widget.h \
     updatecontroller.h \
-    fetchtimes.h    \
-    writeregistermodel.h
+    fetchtimes.h
 
 FORMS += \
     participantlist.ui \

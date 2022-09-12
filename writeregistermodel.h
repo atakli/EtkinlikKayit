@@ -24,6 +24,7 @@ public:
 public slots:
     void setStartAddress(int address);
     void setNumberOfValues(const QString &number);
+    void updateParticipantList();
 
 signals:
     void updateViewport();
@@ -32,9 +33,12 @@ public:
     int m_number = 0;
     int m_address = 0;
     QBitArray m_coils;
-//    QVector<quint16> m_holdingRegisters;
+    //    QVector<quint16> m_holdingRegisters;
+    void setParticipantList(const QStringList &newParticipantList);
+
 private:
 	QStringList participantList;
+    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 	int RowCount;
 };
 

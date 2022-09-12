@@ -28,7 +28,6 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget)
 	getParticipantsFromFile(participantListFile);
 
     participantsWidget = new ParticipantsWidget(participantList);
-    participantsWidget->addItem();
 
     update.setApiUrl("https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest"); // TODO change it!
     update.setVersionFileName(applicationDirPath + "/version.txt");
@@ -67,9 +66,9 @@ Widget::~Widget()
 	delete ui;
 }
 
-void Widget::addToParticipantsWidget()
+void Widget::addToParticipantsWidget(const QString& participant)
 {
-	participantsWidget->addItem();
+    participantsWidget->addItem(participant);
 }
 QStringListModel *Widget::modelFromFile(QFile& file)
 {
@@ -93,7 +92,9 @@ QStringListModel *Widget::modelFromFile(QFile& file)
 void Widget::getParticipantsFromFile(QFile& file)
 {
 	stringListModel = modelFromFile(file);
-	participantList = stringListModel->stringList();
+    participantList = stringListModel->stringList();
+//    participantsWidget->setParticipantList(participantList);
+//    emit participantsWidget->participantListUpdated();
 }
 
 void Widget::addToFile(QFile& file, QComboBox* comboBox)
@@ -122,6 +123,8 @@ void Widget::addToFile(QFile& file, QComboBox* comboBox)
 		checkedButton->setAutoExclusive(false);
 		checkedButton->setChecked(false);
 		checkedButton->setAutoExclusive(true);
+
+        participantsWidget->addItem(comboBox->currentText() + " (" + checkedButton->text() + ")");
     }
     else
     {
@@ -176,17 +179,24 @@ void Widget::addActivity()
 {
     QString etkinlikFileName = ui->etkinlikComboBox->currentText();
     QString adSoyadComboBoxText = ui->adSoyadComboBox->currentText();
+    if (etkinlikFileName.isEmpty() || adSoyadComboBoxText.isEmpty())
+    {
+        QMessageBox qmbox;
+        qmbox.warning(nullptr, tr(appName), QString("Etkinlik veya katılımcı ismi girmediniz!"));
+        return;
+    }
 //    QString participantName = adSoyadComboBoxText.split(' ')[0];
 //    QString category = adSoyadComboBoxText.split(' ')[1].mid(1);
-    QString date = ui->dateEdit->text();
+    QString date = ui->dateEdit->text();                            // TODO: bunun da düzgün bi tarih olup olmadığını kontrol edeyim
     QFile file(etkinlikFileName);
     if (file.exists())
-        openFile(file, etkinlikFileName, QIODevice::Append);
+        openFile(file, etkinlikFileName + ".txt", QIODevice::Append);
     else
-        openFile(file, etkinlikFileName, QIODevice::ReadWrite);
+        openFile(file, etkinlikFileName + ".txt", QIODevice::ReadWrite);
     QTextStream stream(&file);
     stream << date << ", " << adSoyadComboBoxText << "\n";
     stream.flush();
+    statusBar->showMessage(QString("\"%2\" \"%3\" etkinliğine kaydedildi").arg(adSoyadComboBoxText, etkinlikFileName));
 }
 
 void Widget::highlightedIndex(int index)
