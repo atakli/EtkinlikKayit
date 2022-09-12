@@ -40,6 +40,7 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget)
     connect(ui->etkinlikEklePushButton, &QPushButton::clicked, this, [this](){this->addToFile(activityListFile, ui->etkinlikComboBox);});
     connect(ui->kisiEklePushButton, &QPushButton::clicked, this, [this](){this->addToFile(participantListFile, ui->adSoyadComboBox);});
     connect(ui->katilimcilariGetirPushButton, &QPushButton::clicked, participantsWidget, &ParticipantsWidget::show);
+    connect(ui->kaydetPushButton, &QPushButton::clicked, this, &Widget::addActivity);
 
 //    connect(ui->adSoyadComboBox, &QComboBox::highlighted, this, &Widget::highlightedIndex);
 //    connect(ui->adSoyadComboBox, &QComboBox::textHighlighted, this, &Widget::highlightedString);
@@ -173,15 +174,19 @@ void Widget::openFile(QFile& file, const QString& fileName, QIODevice::OpenModeF
 
 void Widget::addActivity()
 {
-    QString fileName = ui->etkinlikComboBox->currentText();
-    QString adSoyadComboBox = ui->adSoyadComboBox->currentText();
-    QString participantName = ui->adSoyadComboBox->currentText();
-//    QString category = ui->
+    QString etkinlikFileName = ui->etkinlikComboBox->currentText();
+    QString adSoyadComboBoxText = ui->adSoyadComboBox->currentText();
+//    QString participantName = adSoyadComboBoxText.split(' ')[0];
+//    QString category = adSoyadComboBoxText.split(' ')[1].mid(1);
     QString date = ui->dateEdit->text();
-    QFile file(fileName);
-    openFile(file, fileName, QIODevice::ReadWrite);
+    QFile file(etkinlikFileName);
+    if (file.exists())
+        openFile(file, etkinlikFileName, QIODevice::Append);
+    else
+        openFile(file, etkinlikFileName, QIODevice::ReadWrite);
     QTextStream stream(&file);
-//    stream << comboBox->currentText() << " (" << checkedButton->text() << ")\n";
+    stream << date << ", " << adSoyadComboBoxText << "\n";
+    stream.flush();
 }
 
 void Widget::highlightedIndex(int index)
