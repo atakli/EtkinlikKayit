@@ -27,7 +27,6 @@ private:
     Ui::Widget *ui;
     QRadioButton* checkedButton;
 	ParticipantsWidget *participantsWidget;
-    void addToParticipantsWidget(const QString &participant);
     const char* appName = "Etkinlik Kayıt Programı";
     QFile activityListFile, participantListFile, logFile;
     QStringListModel *modelFromFile(QFile &file);
@@ -36,7 +35,7 @@ private:
     UpdateController update;
 	void getParticipantsFromFile(QFile &file);
 	QStringListModel* stringListModel;
-	QStringList participantList;
+    QStringList stringList, participantList;
     void addToFile(QFile &file, QComboBox *comboBox);
     void startCompleter(QFile &file, QComboBox *comboBox);
     void openFile(QFile& file, const QString &fileName, QIODevice::OpenModeFlag omf);

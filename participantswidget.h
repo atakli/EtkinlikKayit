@@ -3,24 +3,21 @@
 
 #include <QWidget>
 
-class WriteRegisterModel;
-
 namespace Ui { class Form; }
 
 class ParticipantsWidget : public QWidget
 {
     Q_OBJECT
 public:
-    ParticipantsWidget(const QStringList& participantList, QWidget* parent = nullptr);
+    ParticipantsWidget(QStringList* participantList, QWidget* parent = nullptr);
     void addItem(const QString& participant);
-    void addItems(const QStringList& participants);
-    void setParticipantList(const QStringList &newParticipantList);
-
+    void addItems();
 private:
     int rowIndex = 0;
     Ui::Form *ui;
-	QStringList participantList;
-//    bool setHead
+    QStringList* participantList;
+private slots:
+    void selectAllCheckBoxes(bool state);
 signals:
     void participantListUpdated();
 };

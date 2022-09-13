@@ -1,18 +1,12 @@
-#include "widget.h"
-#include "qlineedit.h"
 #include "ui_widget.h"
+#include "widget.h"
 
 #include <algorithm>
 
-#include <QAbstractItemModel>
-#include <QStandardItemModel>
-#include <QAbstractItemView>
 #include <QStringListModel>
 #include <QMessageBox>
-#include <QMouseEvent>
 #include <QCompleter>
 #include <QStatusBar>
-#include <QListView>
 #include <QDebug>
 
 extern QString applicationDirPath;
@@ -27,9 +21,9 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget)
 
 	getParticipantsFromFile(participantListFile);
 
-    participantsWidget = new ParticipantsWidget(participantList);
+    participantsWidget = new ParticipantsWidget(&participantList);
 
-    update.setApiUrl("https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest"); // TODO change it!
+    update.setApiUrl("https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest");
     update.setVersionFileName(applicationDirPath + "/version.txt");
     update.setAppName(appName);
     update.setApiPath(applicationDirPath + "/api.json");
@@ -66,10 +60,6 @@ Widget::~Widget()
 	delete ui;
 }
 
-void Widget::addToParticipantsWidget(const QString& participant)
-{
-    participantsWidget->addItem(participant);
-}
 QStringListModel *Widget::modelFromFile(QFile& file)
 {
 #ifndef QT_NO_CURSOR
@@ -92,9 +82,9 @@ QStringListModel *Widget::modelFromFile(QFile& file)
 void Widget::getParticipantsFromFile(QFile& file)
 {
 	stringListModel = modelFromFile(file);
-    participantList = stringListModel->stringList();
-//    participantsWidget->setParticipantList(participantList);
-//    emit participantsWidget->participantListUpdated();
+    stringList = stringListModel->stringList();
+    if (file.fileName() == participantListFile.fileName())
+        participantList = stringList;
 }
 
 void Widget::addToFile(QFile& file, QComboBox* comboBox)
@@ -137,10 +127,7 @@ void Widget::addToFile(QFile& file, QComboBox* comboBox)
         stream << comboBox->currentText() << '\n';
     }
     stream.flush();
-	startCompleter(file, comboBox);
-//	participantList.append(comboBox->currentText());
-//	stringListModel->setStringList(participantList);
-//	completer->setModel(stringListModel);
+    startCompleter(file, comboBox);
 
 	comboBox->clearEditText();
 }
@@ -152,12 +139,10 @@ void Widget::startCompleter(QFile& file, QComboBox* comboBox)
     completer->setMaxVisibleItems(10);
     completer->setWrapAround(true);     // bunun ne işe yaradığını anlamadım
 
-//    QStringListModel* stringListModel = modelFromFile(file);
 	getParticipantsFromFile(file);
     completer->setModel(stringListModel);
 
-//    comboBox->addItems(stringListModel->stringList());
-	comboBox->addItems(participantList);
+    comboBox->addItems(stringList);
 
     delete comboBox->completer();
     comboBox->setCompleter(completer);

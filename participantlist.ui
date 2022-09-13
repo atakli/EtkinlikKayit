@@ -29,25 +29,33 @@
       <bool>true</bool>
      </property>
      <property name="rowCount">
-      <number>5</number>
+      <number>0</number>
      </property>
      <property name="columnCount">
       <number>3</number>
      </property>
-     <row/>
-     <row/>
-     <row/>
-     <row/>
-     <row/>
      <column/>
      <column/>
      <column/>
-     <item row="0" column="0">
-      <property name="textAlignment">
-       <set>AlignCenter</set>
-      </property>
-     </item>
     </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QPushButton" name="tumunuSecPushButton">
+       <property name="text">
+        <string>Tümünü Seç</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="hicbiriniSecmePushButton">
+       <property name="text">
+        <string>Hiçbirini Seçme</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
