@@ -32,6 +32,15 @@ void ParticipantsWidget::addItems()
         addItem(participantList->at(i));
 }
 
+std::vector<int> ParticipantsWidget::getSelectedParticipants()
+{
+    std::vector<int> selectedParticipants;
+    for (int i = 0; i < participantList->size(); ++i)
+        if (static_cast<QCheckBox*>(ui->tableWidget->cellWidget(i, 0))->isChecked())
+            selectedParticipants.push_back(i);
+    return selectedParticipants;
+}
+
 void ParticipantsWidget::selectAllCheckBoxes(bool state)
 {
     for (int i = 0; i < participantList->size(); ++i)

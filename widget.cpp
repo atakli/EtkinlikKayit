@@ -7,7 +7,9 @@
 #include <QMessageBox>
 #include <QCompleter>
 #include <QStatusBar>
+#include <QMenuBar>
 #include <QDebug>
+#include <QMenu>
 
 extern QString applicationDirPath;
 
@@ -15,19 +17,17 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget)
 {
     ui->setupUi(this);
 
+    initializeMenusAndBars();
+
     openFile(activityListFile, "etkinlikler.txt", QIODevice::ReadWrite);
     openFile(logFile, "logs.txt", QIODevice::ReadWrite);
     openFile(participantListFile, "katilimcilar.txt", QIODevice::ReadWrite);
 
-	getParticipantsFromFile(participantListFile);
+    getFromFile(participantListFile);
 
     participantsWidget = new ParticipantsWidget(&participantList);
 
-    update.setApiUrl("https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest");
-    update.setVersionFileName(applicationDirPath + "/version.txt");
-    update.setAppName(appName);
-    update.setApiPath(applicationDirPath + "/api.json");
-    update.setDownloadFileName("etkinlikKayit.zip");
+    update.setParameters("https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest", appName, "etkinlikKayit.zip");
     update.isNewVersionAvailable();
 
     connect(ui->etkinlikEklePushButton, &QPushButton::clicked, this, [this](){this->addToFile(activityListFile, ui->etkinlikComboBox);});
@@ -41,9 +41,6 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget)
 //    connect(ui->adSoyadComboBox, &QComboBox::currentTextChanged, this, &Widget::highlightedString);
 
     ui->dateEdit->setDate(QDateTime::currentDateTime().date());
-
-    statusBar = new QStatusBar(this);
-    ui->horizontalLayoutBottom->addWidget(statusBar);
 
     ui->etkinlikComboBox->setCompleter(nullptr);    // nullptr yapmamın sebebi startCompleter'ın içinde delete edebilmek
     ui->adSoyadComboBox->setCompleter(nullptr);
@@ -79,12 +76,20 @@ QStringListModel *Widget::modelFromFile(QFile& file)
 	return new QStringListModel(words, completer);
 }
 
-void Widget::getParticipantsFromFile(QFile& file)
+void Widget::getFromFile(QFile& file)
 {
 	stringListModel = modelFromFile(file);
     stringList = stringListModel->stringList();
     if (file.fileName() == participantListFile.fileName())
         participantList = stringList;
+    participantList.sort(Qt::CaseInsensitive);
+}
+
+QStringList Widget::getLastThreeActivityDates(const QString& etkinlikFileName)
+{
+    QFile file(etkinlikFileName);
+    openFile(file, etkinlikFileName + ".txt", QIODevice::ReadWrite);
+    // vektöre veya set'e atıp sıralayıp sonra son üçünü alabilirim. hatta son üçünü almak için tamamını sıralamama gerek olmayabilri. bunun bahsi geçmişti sanki
 }
 
 void Widget::addToFile(QFile& file, QComboBox* comboBox)
@@ -95,6 +100,11 @@ void Widget::addToFile(QFile& file, QComboBox* comboBox)
     {
         auto categories = ui->yasKategoriGroupBox->findChildren<QRadioButton*>();
 		auto checkedButtonIter = std::find_if(std::cbegin(categories), std::cend(categories), [](const auto&button){return button->isChecked();});
+        /*Warns when a lambda inside a connect() captures local variables by reference.
+        Example:
+        int a;
+        connect(obj, &MyObj::mySignal, [&a] { ... });
+        This usually results in a crash since the lambda might get called after the captured variable went out of scope.*/
         checkedButton = *checkedButtonIter;
         if(comboBox->currentText().isEmpty())
         {
@@ -139,7 +149,7 @@ void Widget::startCompleter(QFile& file, QComboBox* comboBox)
     completer->setMaxVisibleItems(10);
     completer->setWrapAround(true);     // bunun ne işe yaradığını anlamadım
 
-	getParticipantsFromFile(file);
+    getFromFile(file);
     completer->setModel(stringListModel);
 
     comboBox->addItems(stringList);
@@ -148,7 +158,7 @@ void Widget::startCompleter(QFile& file, QComboBox* comboBox)
     comboBox->setCompleter(completer);
 }
 
-void Widget::openFile(QFile& file, const QString& fileName, QIODevice::OpenModeFlag flag)
+void Widget::openFile(QFile& file, const QString& fileName, QIODevice::OpenModeFlag flag)       // error return ekle veya exception
 {
     file.setFileName(fileName);
 
@@ -163,25 +173,74 @@ void Widget::openFile(QFile& file, const QString& fileName, QIODevice::OpenModeF
 void Widget::addActivity()
 {
     QString etkinlikFileName = ui->etkinlikComboBox->currentText();
-    QString adSoyadComboBoxText = ui->adSoyadComboBox->currentText();
-    if (etkinlikFileName.isEmpty() || adSoyadComboBoxText.isEmpty())
+    if (etkinlikFileName.isEmpty())
     {
         QMessageBox qmbox;
-        qmbox.warning(nullptr, tr(appName), QString("Etkinlik veya katılımcı ismi girmediniz!"));
+        qmbox.warning(nullptr, tr(appName), QString("Etkinlik ismi girmediniz!"));
         return;
     }
-//    QString participantName = adSoyadComboBoxText.split(' ')[0];
-//    QString category = adSoyadComboBoxText.split(' ')[1].mid(1);
     QString date = ui->dateEdit->text();                            // TODO: bunun da düzgün bi tarih olup olmadığını kontrol edeyim
     QFile file(etkinlikFileName);
-    if (file.exists())
-        openFile(file, etkinlikFileName + ".txt", QIODevice::Append);
-    else
-        openFile(file, etkinlikFileName + ".txt", QIODevice::ReadWrite);
+//    if (file.exists())
+//        openFile(file, etkinlikFileName + ".txt", QIODevice::Append);
+//    else
+    openFile(file, etkinlikFileName + ".txt", QIODevice::ReadWrite);
+    file.seek(file.size());
     QTextStream stream(&file);
-    stream << date << ", " << adSoyadComboBoxText << "\n";
+    auto selectedParticipants = participantsWidget->getSelectedParticipants();
+    if (selectedParticipants.empty())
+    {
+        QMessageBox qmbox;
+        qmbox.warning(nullptr, tr(appName), QString("Katılımcı seçmediniz!"));
+        return;
+    }
+    else
+        for (auto index : selectedParticipants)
+            stream << date << ", " << participantList.at(index) << "\n";
     stream.flush();
-    statusBar->showMessage(QString("\"%2\" \"%3\" etkinliğine kaydedildi").arg(adSoyadComboBoxText, etkinlikFileName));
+    statusBar->showMessage(QString("Seçili kişi(ler) \"%1\" etkinliğine kaydedildi").arg(etkinlikFileName));
+}
+
+void Widget::initializeMenusAndBars()
+{
+    QMenuBar* menuBar = new QMenuBar;
+
+    QMenu* windowMenu = new QMenu("Window");
+    menuBar->addMenu(windowMenu);
+    QMenu* helpMenu = new QMenu("Yardım");
+    menuBar->addMenu(helpMenu);
+
+    QAction* onTopAct = new QAction("Her zaman üstte", this);
+    onTopAct->setCheckable(true);
+    windowMenu->addAction(onTopAct);
+    connect(onTopAct, &QAction::triggered, this, &Widget::onTopAction);
+
+    QAction* updateAct = new QAction("Güncelleme kontrolü", this);
+    helpMenu->addAction(updateAct);
+    connect(updateAct, &QAction::triggered, this, [this](){update.isNewVersionAvailable();});
+
+    ui->verticalLayout_2->setMenuBar(menuBar);
+
+    statusBar = new QStatusBar(this);
+    ui->horizontalLayoutBottom->addWidget(statusBar);
+}
+
+void Widget::onTopAction()
+{
+    static bool alwaysOnTop = false;
+    if (!alwaysOnTop)
+    {
+        setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+        participantsWidget->setWindowFlags(participantsWidget->windowFlags() | Qt::WindowStaysOnTopHint);
+    }
+    else
+    {
+        setWindowFlags(windowFlags() & (~Qt::WindowStaysOnTopHint));
+        participantsWidget->setWindowFlags(participantsWidget->windowFlags() & (~Qt::WindowStaysOnTopHint));
+    }
+    alwaysOnTop = !alwaysOnTop;
+    participantsWidget->show();
+    show();
 }
 
 void Widget::highlightedIndex(int index)

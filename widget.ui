@@ -37,7 +37,10 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0">
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,0,0">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayoutForMenuBar"/>
+     </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_7">
        <item>
@@ -83,7 +86,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton">
+        <widget class="QPushButton" name="kisiSilPushButton">
          <property name="text">
           <string>Kişi Sil</string>
          </property>
@@ -252,28 +255,28 @@
        </widget>
       </widget>
      </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
-      <widget class="QPushButton" name="kaydetPushButton">
-       <property name="text">
-        <string>Kaydet</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QPushButton" name="kaydetPushButton">
+         <property name="text">
+          <string>Kaydet</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="katilimcilariGetirPushButton">
+         <property name="text">
+          <string>Kayıtlı Kişileri Getir</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QPushButton" name="katilimcilariGetirPushButton">
-       <property name="text">
-        <string>Kayıtlı Kişileri Getir</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayoutBottom"/>
      </item>
     </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayoutBottom"/>
    </item>
   </layout>
  </widget>

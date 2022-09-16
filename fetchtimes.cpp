@@ -12,9 +12,10 @@ void HttpWindow::startRequest(const QUrl &requestedUrl)
 {
 	QNetworkRequest req = QNetworkRequest(requestedUrl);
 //#if QT_VERSION < QT_VERSION_CHECK(5,15,3)
-#if QT_VERSION < 393729                                                 // TODO: düzeltmem gerekli burayı. generic değil. sadece bana uygun
-    req.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
-#endif	// 331266 (linux)
+//#if QT_VERSION < 393729                                                 // TODO: düzeltmem gerekli burayı. generic değil. sadece bana uygun
+//#if QT_VERSION < 493729                                                 // TODO: düzeltmem gerekli burayı. generic değil. sadece bana uygun
+//    req.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);
+//#endif	// 331266 (linux)
 //	req.setHeader(QNetworkRequest::LocationHeader, "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0");
 
 	reply.reset(qnam.get(req));

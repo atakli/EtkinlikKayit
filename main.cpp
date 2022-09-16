@@ -9,7 +9,6 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     applicationDirPath = QFileInfo(argv[0]).absolutePath();
-    qDebug() << "applicationDirPath:" << applicationDirPath;
     Widget w;
     w.show();
     return a.exec();

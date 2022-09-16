@@ -13,8 +13,10 @@ class QAbstractItemModel;
 class QStringListModel;
 class QRadioButton;
 class QCompleter;
-class QComboBox;
 class QStatusBar;
+class QComboBox;
+class QMenuBar;
+class QMenu;
 QT_END_NAMESPACE
 
 class Widget : public QWidget
@@ -25,22 +27,26 @@ public:
     ~Widget();
 private:
     Ui::Widget *ui;
-    QRadioButton* checkedButton;
-	ParticipantsWidget *participantsWidget;
-    const char* appName = "Etkinlik Kayıt Programı";
-    QFile activityListFile, participantListFile, logFile;
-    QStringListModel *modelFromFile(QFile &file);
-    QCompleter* completer = nullptr;
     QStatusBar* statusBar;
     UpdateController update;
-	void getParticipantsFromFile(QFile &file);
+    QRadioButton* checkedButton;
+    QCompleter* completer = nullptr;
 	QStringListModel* stringListModel;
+    ParticipantsWidget *participantsWidget;
     QStringList stringList, participantList;
+    const char* appName = "Etkinlik Kayıt Programı";
+    QFile activityListFile, participantListFile, logFile;
+
+    void addActivity();
+    void initializeMenusAndBars();
+    void getFromFile(QFile &file);
+    QStringListModel *modelFromFile(QFile &file);
     void addToFile(QFile &file, QComboBox *comboBox);
     void startCompleter(QFile &file, QComboBox *comboBox);
+    QStringList getLastThreeActivityDates(const QString& etkinlikFileName);
     void openFile(QFile& file, const QString &fileName, QIODevice::OpenModeFlag omf);
-    void addActivity();
 private slots:
+    void onTopAction();
     void highlightedIndex(int index);
     void highlightedString(const QString &text);
 };

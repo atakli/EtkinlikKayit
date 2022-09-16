@@ -11,10 +11,11 @@ class ParticipantsWidget : public QWidget
 public:
     ParticipantsWidget(QStringList* participantList, QWidget* parent = nullptr);
     void addItem(const QString& participant);
-    void addItems();
+    std::vector<int> getSelectedParticipants();
 private:
     int rowIndex = 0;
     Ui::Form *ui;
+    void addItems();
     QStringList* participantList;
 private slots:
     void selectAllCheckBoxes(bool state);
