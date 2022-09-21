@@ -45,6 +45,7 @@ private:
     void startCompleter(QFile &file, QComboBox *comboBox);
     QStringList getLastThreeActivityDates(const QString& etkinlikFileName);
     void openFile(QFile& file, const QString &fileName, QIODevice::OpenModeFlag omf);
+    void addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants);
 private slots:
     void onTopAction();
     void highlightedIndex(int index);

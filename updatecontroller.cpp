@@ -20,16 +20,21 @@ QString UpdateController::openFile(const QString& fileName, QIODevice::OpenModeF
 		return "";							// TODO: buraya girerse ne olcak?
     return file.readAll();
 }
-bool UpdateController::compareTagVersion(const QString& tag, const QString& currentTag) // TODO: .'lar arasında birden fazla basamak olursa da çalışmalı
-{
+bool UpdateController::compareTagVersion(const QString& tagAtGithub, const QString& currentTag) // TODO: .'lar arasında birden fazla basamak olursa da çalışmalı
+{ // TODO: bi struct yapıp operator< tanımlayabilirim
 //	osName = currentTag.split(".").last().split("-").last().trimmed();
-    QStringList tagList = tag.mid(1).split("-").at(0).split(".");
-    QStringList currentTagList = currentTag.mid(1).split("-").at(0).split(".");
-    for (int i = 0; i < 3; ++i)
-        if (tagList.at(i).toInt() > currentTagList.at(i).toInt())
-            return true;
-    return false;
+    auto parse = [](const QString& str){return str.mid(1).split("-").at(0).split(".");};
+    auto makeIntVector = [parse](const QString& str)
+    {
+        std::vector<int> ivec;
+        for (const auto& s : parse(str))
+            ivec.emplace_back(s.toInt());
+        return ivec;
+    };
+
+    return makeIntVector(tagAtGithub) > makeIntVector(currentTag);
 }
+
 void UpdateController::isNewVersionAvailable()
 {
     if (!isParametersSet)

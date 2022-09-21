@@ -90,6 +90,7 @@ QStringList Widget::getLastThreeActivityDates(const QString& etkinlikFileName)
     QFile file(etkinlikFileName);
     openFile(file, etkinlikFileName + ".txt", QIODevice::ReadWrite);
     // vektöre veya set'e atıp sıralayıp sonra son üçünü alabilirim. hatta son üçünü almak için tamamını sıralamama gerek olmayabilri. bunun bahsi geçmişti sanki
+    return {};
 }
 
 void Widget::addToFile(QFile& file, QComboBox* comboBox)
@@ -99,7 +100,7 @@ void Widget::addToFile(QFile& file, QComboBox* comboBox)
     if (file.fileName() == participantListFile.fileName())
     {
         auto categories = ui->yasKategoriGroupBox->findChildren<QRadioButton*>();
-		auto checkedButtonIter = std::find_if(std::cbegin(categories), std::cend(categories), [](const auto&button){return button->isChecked();});
+        auto checkedButtonIter = std::find_if(std::cbegin(categories), std::cend(categories), [](const auto&button){return button->isChecked();});
         /*Warns when a lambda inside a connect() captures local variables by reference.
         Example:
         int a;
@@ -111,7 +112,7 @@ void Widget::addToFile(QFile& file, QComboBox* comboBox)
             qmbox.warning(nullptr, tr(appName), "Kişi ismi girilmemiş!");
             return;
         }
-		else if (checkedButtonIter == categories.cend())
+        else if (checkedButtonIter == categories.cend())
         {
             qmbox.warning(nullptr, tr(appName), QString("%1 için yaş kategorisi seçilmemiş!").arg(comboBox->currentText()));
             return;
@@ -173,6 +174,7 @@ void Widget::openFile(QFile& file, const QString& fileName, QIODevice::OpenModeF
 void Widget::addActivity()
 {
     QString etkinlikFileName = ui->etkinlikComboBox->currentText();
+
     if (etkinlikFileName.isEmpty())
     {
         QMessageBox qmbox;
@@ -180,14 +182,14 @@ void Widget::addActivity()
         return;
     }
     QString date = ui->dateEdit->text();                            // TODO: bunun da düzgün bi tarih olup olmadığını kontrol edeyim
-    QFile file(etkinlikFileName);
-//    if (file.exists())
-//        openFile(file, etkinlikFileName + ".txt", QIODevice::Append);
-//    else
-    openFile(file, etkinlikFileName + ".txt", QIODevice::ReadWrite);
-    file.seek(file.size());
-    QTextStream stream(&file);
+    QFile etkinlikFile(etkinlikFileName);
+
+    openFile(etkinlikFile, etkinlikFileName + ".txt", QIODevice::ReadWrite);
+
+    etkinlikFile.seek(etkinlikFile.size());
+    QTextStream stream(&etkinlikFile);
     auto selectedParticipants = participantsWidget->getSelectedParticipants();
+    QStringList participants;
     if (selectedParticipants.empty())
     {
         QMessageBox qmbox;
@@ -196,9 +198,48 @@ void Widget::addActivity()
     }
     else
         for (auto index : selectedParticipants)
+        {
             stream << date << ", " << participantList.at(index) << "\n";
+            participants << participantList.at(index);
+        }
+
+    addActivityParticipant(etkinlikFileName, participants);
     stream.flush();
     statusBar->showMessage(QString("Seçili kişi(ler) \"%1\" etkinliğine kaydedildi").arg(etkinlikFileName));
+}
+
+void Widget::addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants)
+{
+    QString etkinlikKatilimcilarilariFileName = fileName + "_Participants";
+    QFile etkinlikKatilimcilariFile(etkinlikKatilimcilarilariFileName);
+    openFile(etkinlikKatilimcilariFile, etkinlikKatilimcilarilariFileName + ".txt", QIODevice::ReadWrite);
+
+    QStringList participants;
+    etkinlikKatilimcilariFile.seek(0);
+    while (!etkinlikKatilimcilariFile.atEnd())
+    {
+        QByteArray line = etkinlikKatilimcilariFile.readLine();
+        if (!line.isEmpty())
+            participants << QString::fromUtf8(line.trimmed());
+    }
+    for (const auto& participant : selectedParticipants)
+    {
+        auto iter = std::find(participants.begin(), participants.end(), participant);
+        if (iter == participants.end())
+        {
+            participants << participant + ",3\n";
+        }
+        else
+        {
+            int number = (*iter).split(",").last().toInt();
+            *iter = participant + "," + QString::number(++number) + "\n";
+        }
+    }
+    etkinlikKatilimcilariFile.seek(0);                                  // TODO: sadece orayı değiştirmek diye bişey var mı? çünkü şuan baştan yazıyorum sanırım
+    QTextStream stream(&etkinlikKatilimcilariFile);
+    for (const auto& participant : participants)
+        stream << participant;
+    stream.flush();
 }
 
 void Widget::initializeMenusAndBars()
