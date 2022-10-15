@@ -13,17 +13,19 @@ CONFIG += c++20
 # böyle bişey başına gelebilir; hatırla: Why does it miss these files? -> these files are related to the mingw runtime library, they do not belong to Qt and that's why windeployqt does not add them by default.
 
 SOURCES += \
+    activity.cpp \
+    httpmanager.cpp \
     main.cpp \
     participantswidget.cpp \
     widget.cpp \
-    updatecontroller.cpp \
-    fetchtimes.cpp
+    updatecontroller.cpp
 
 HEADERS += \
+    activity.h \
+    httpmanager.h \
     participantswidget.h \
     widget.h \
-    updatecontroller.h \
-    fetchtimes.h
+    updatecontroller.h
 
 FORMS += \
     participantlist.ui \

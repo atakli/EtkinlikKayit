@@ -1,22 +1,11 @@
 #ifndef UPDATECONTROLLER_H
 #define UPDATECONTROLLER_H
 
-#include "fetchtimes.h"
+#include "httpmanager.h"
 
 #include <QWidget>
 #include <QObject>
 #include <QDialog>
-
-extern QString applicationDirPath;
-
-class string
-{
-    QString str;
-    bool operator>(string s)
-    {
-
-    }
-};
 
 class UpdateController : public QObject
 {
@@ -24,15 +13,16 @@ class UpdateController : public QObject
 public:
     void isNewVersionAvailable();
     void setParameters(const QString& apiUrl, const QString& appName, const QString& downloadFileName);
+    void downloadFile(QString fileName, QString urlSpec, const QString& downloadFileName);
 private:
-//	QString osName;
+    QString osName;
     QString apiUrl;
     QString appName;
-    HttpWindow fetchTimes;
+    HttpManager httpManager;
     QString downloadFileName;
     bool isParametersSet = false;
-    QString apiPath = applicationDirPath + "/api.json";
-    QString versionFileName = applicationDirPath + "/version.txt";
+    QString apiPath = "api.json";
+    QString versionFileName = "version.txt";
     bool compareTagVersion(const QString& tag, const QString& currentTag);
     QString openFile(const QString& fileName, QIODevice::OpenModeFlag flag=QIODevice::ReadOnly);
 };

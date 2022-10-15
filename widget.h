@@ -6,6 +6,7 @@
 
 #include "participantswidget.h"
 #include "updatecontroller.h"
+#include "activity.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -29,26 +30,21 @@ private:
     Ui::Widget *ui;
     QStatusBar* statusBar;
     UpdateController update;
-    QRadioButton* checkedButton;
     QCompleter* completer = nullptr;
-	QStringListModel* stringListModel;
+    std::unique_ptr<Activity> activity;
     ParticipantsWidget *participantsWidget;
-    QStringList stringList, participantList;
-    const char* appName = "Etkinlik Kayıt Programı";
-    QFile activityListFile, participantListFile, logFile;
+    QStringList participantList;
+//    const char* appName = "Etkinlik Kayıt Programı";
 
     void addActivity();
     void initializeMenusAndBars();
-    void getFromFile(QFile &file);
     QStringListModel *modelFromFile(QFile &file);
-    void addToFile(QFile &file, QComboBox *comboBox);
-    void startCompleter(QFile &file, QComboBox *comboBox);
-    QStringList getLastThreeActivityDates(const QString& etkinlikFileName);
-    void openFile(QFile& file, const QString &fileName, QIODevice::OpenModeFlag omf);
     void addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants);
+    std::pair<QStringList, QStringListModel*> getFromFile(QFile &file, QStringList& participantList);
 private slots:
     void onTopAction();
     void highlightedIndex(int index);
     void highlightedString(const QString &text);
+    void startCompleter(QFile &file, QComboBox *comboBox);
 };
 #endif // WIDGET_H

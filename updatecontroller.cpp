@@ -13,6 +13,11 @@ void UpdateController::setParameters(const QString &apiUrl, const QString &appNa
     isParametersSet = true;
 }
 
+void UpdateController::downloadFile(QString fileName, QString urlSpec, const QString& downloadFileName)
+{
+    httpManager.downloadSynchronous(fileName, urlSpec, downloadFileName);
+}
+
 QString UpdateController::openFile(const QString& fileName, QIODevice::OpenModeFlag flag)
 {
 	QFile file(fileName);
@@ -21,8 +26,8 @@ QString UpdateController::openFile(const QString& fileName, QIODevice::OpenModeF
     return file.readAll();
 }
 bool UpdateController::compareTagVersion(const QString& tagAtGithub, const QString& currentTag) // TODO: .'lar arasında birden fazla basamak olursa da çalışmalı
-{ // TODO: bi struct yapıp operator< tanımlayabilirim
-//	osName = currentTag.split(".").last().split("-").last().trimmed();
+{
+    osName = currentTag.contains("-") ? currentTag.split("-").last().trimmed() : "";
     auto parse = [](const QString& str){return str.mid(1).split("-").at(0).split(".");};
     auto makeIntVector = [parse](const QString& str)
     {
@@ -43,7 +48,7 @@ void UpdateController::isNewVersionAvailable()
         qmbox.warning(nullptr, tr(appName.toStdString().c_str()), "Güncelleme Kontrolcüsüne parametreler geçilmemiş\nGüncelleme olup olmadığını kontrol edebilmek için gerekli parametreleri geçip tekrar deneyin");
         return;
     }
-    fetchTimes.downloadSynchronous(apiPath, apiUrl, "");
+    httpManager.downloadSynchronous(apiPath, apiUrl, "");
 
     const QString saveData = openFile(apiPath);
 //	QJsonDocument loadDoc = QJsonDocument::fromVariant(saveData);
@@ -57,10 +62,15 @@ void UpdateController::isNewVersionAvailable()
 			return;
 		}
 //            https://github.com/atakli/EtkinlikKayit/releases/latest/download/EtkinlikKayit.zip
-        fetchTimes.downloadSynchronous("", loadDoc["assets"][0]["browser_download_url"].toString(), downloadFileName); // ismi PrayerReminder.zip'dan başka bişey olursa diye // TODO: 0'da sıkıntı olabilir
-//		fetchTimes.downloadSynchronous("", "https://github.com/atakli/PrayerReminder-Desktop/releases/latest/download/PrayerReminder-" + osName + ".zip");
-//        fetchTimes.downloadSynchronous("", "https://github.com/atakli/PrayerReminder-Desktop/releases/latest/download/PrayerReminder" + QString(".zip"));
-	}
+        QString url = loadDoc["assets"][0]["browser_download_url"].toString();
+        if (!osName.isEmpty())
+        {
+            if (!url.endsWith(osName + ".zip", Qt::CaseInsensitive))
+                url = loadDoc["assets"][1]["browser_download_url"].toString();
+        }
+        httpManager.downloadSynchronous("", url, downloadFileName); // ismi PrayerReminder.zip'dan başka bişey olursa diye // TODO: 0'da sıkıntı olabilir
+//        QString url = "https://github.com/atakli/PrayerReminder-Desktop/releases/latest/download/PrayerReminder-" + osName + ".zip";
+    }
 	else
 	{
 		QMessageBox qmbox;
