@@ -1,4 +1,5 @@
 #include "activity.h"
+#include "ui_widget.h"
 #include "widget.h"
 
 #include <QTextStream>
@@ -13,13 +14,73 @@ Activity::Activity(Widget* widget, QObject *parent) : QObject(parent), widget(wi
     openFile(logFile, "logs.txt", QIODevice::ReadWrite);
     openFile(participantListFile, "katilimcilar.txt", QIODevice::ReadWrite);
 }
+void Activity::addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants)
+{
+    QString etkinlikKatilimcilarilariFileName = fileName + "_Participants";
+    QFile etkinlikKatilimcilariFile(etkinlikKatilimcilarilariFileName);
+    openFile(etkinlikKatilimcilariFile, etkinlikKatilimcilarilariFileName + ".txt", QIODevice::ReadWrite);
+
+    QStringList participants;
+    etkinlikKatilimcilariFile.seek(0);
+    while (!etkinlikKatilimcilariFile.atEnd())
+    {
+        QString line = etkinlikKatilimcilariFile.readLine();
+        if (!line.isEmpty())
+            participants << line.trimmed().split(",").at(0);
+    }
+    for (const auto& participant : widget->participantList)
+    {
+        auto iter = std::find(participants.begin(), participants.end(), participant);
+        if (iter != participants.end())                 // bu etkinliğe kayıtlı
+        {
+            qDebug() << "1";
+            auto iter1 = std::find(selectedParticipants.begin(), selectedParticipants.end(), *iter);
+            if (iter1 == selectedParticipants.end())    // bu etkinliğe kayıtlı ama buna katılmamış
+            {
+                qDebug() << "3";
+                int number = (*iter).split(",").last().toInt();
+                if (number == 0)
+                    continue;
+                *iter = participant + "," + QString::number(--number);
+                qDebug() << "burda 3:" << participants;
+            }
+            else                                        // bu etkinliğe kayıtlı ve buna da katılmış
+            {
+                qDebug() << "4";
+                int number = (*iter).split(",").last().toInt();     // 3\n ifadesi toInt ile sayıya başarıyla dönüşür mü kontrol et
+                if (number == 3)
+                    continue;
+                *iter = participant + "," + QString::number(++number);
+                qDebug() << "burda 2:" << participants;
+            }
+        }
+        else                                            // bu etkinliğe kayıtlı değil
+        {
+            qDebug() << "2";
+            auto iter1 = std::find(selectedParticipants.begin(), selectedParticipants.end(), *iter);
+            if (iter1 != selectedParticipants.end())    // bu etkinliğe kayıtlı değil, ilk defa katılıyor. else kısmı da ne kayıtlı ne de yeni katılanlar. ama tabiki yazacak bişey yok
+            {
+                participants << participant + ",3";
+                qDebug() << "burda 1:" << participant;
+            }
+        }
+    }
+    etkinlikKatilimcilariFile.seek(0);                                  // TODO: sadece orayı değiştirmek diye bişey var mı? çünkü şuan baştan yazıyorum sanırım
+    QTextStream stream(&etkinlikKatilimcilariFile);
+    for (const auto& participant : participants)
+        stream << participant + "\n";
+    stream.flush();
+}
 void Activity::addActivity()
 {
 	QString etkinlikFileName = widget->ui->etkinlikComboBox->currentText();
 
-	if (etkinlikFileName.isEmpty())
+    activityListFile.seek(0);
+    QStringList activities = QString(activityListFile.readAll()).split("\n");
+
+    if (etkinlikFileName.isEmpty() || !activities.contains(etkinlikFileName))
 	{
-		QMessageBox{}.warning(nullptr, appName, QString("Etkinlik ismi girmediniz!"));
+        QMessageBox{}.warning(nullptr, appName, QString("Etkinlik ismi girmediniz veya yanlış girdiniz!"));
 		return;
 	}
 	QString date = widget->ui->dateEdit->text();	// TODO: bunun da düzgün bi tarih olup olmadığını kontrol edeyim
@@ -45,7 +106,7 @@ void Activity::addActivity()
 
 	addActivityParticipant(etkinlikFileName, participants);
 	stream.flush();
-	statusBarMessage(QString("Seçili kişi(ler) \"%1\" etkinliğine kaydedildi").arg(etkinlikFileName));
+    emit statusBarMessage(QString("Seçili kişi(ler) \"%1\" etkinliğine kaydedildi").arg(etkinlikFileName));
 }
 void Activity::addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*> categories)
 {

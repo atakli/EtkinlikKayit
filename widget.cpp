@@ -20,7 +20,6 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), activity{
     initializeMenusAndBars();
 
     getFromFile(activity->participantListFile, participantList);
-
     participantsWidget = new ParticipantsWidget(&participantList);
 
     update.setParameters("https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest", appName, "etkinlikKayit.zip");
@@ -73,39 +72,7 @@ void Widget::startCompleter(QFile& file, QComboBox* comboBox)
     comboBox->setCompleter(completer);
 }
 
-void Widget::addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants)
-{
-    QString etkinlikKatilimcilarilariFileName = fileName + "_Participants";
-    QFile etkinlikKatilimcilariFile(etkinlikKatilimcilarilariFileName);
-    activity->openFile(etkinlikKatilimcilariFile, etkinlikKatilimcilarilariFileName + ".txt", QIODevice::ReadWrite);
 
-    QStringList participants;
-    etkinlikKatilimcilariFile.seek(0);
-    while (!etkinlikKatilimcilariFile.atEnd())
-    {
-        QByteArray line = etkinlikKatilimcilariFile.readLine();
-        if (!line.isEmpty())
-            participants << QString::fromUtf8(line.trimmed());
-    }
-    for (const auto& participant : selectedParticipants)
-    {
-        auto iter = std::find(participants.begin(), participants.end(), participant);
-        if (iter == participants.end())
-        {
-            participants << participant + ",3\n";
-        }
-        else
-        {
-            int number = (*iter).split(",").last().toInt();
-            *iter = participant + "," + QString::number(++number) + "\n";
-        }
-    }
-    etkinlikKatilimcilariFile.seek(0);                                  // TODO: sadece orayı değiştirmek diye bişey var mı? çünkü şuan baştan yazıyorum sanırım
-    QTextStream stream(&etkinlikKatilimcilariFile);
-    for (const auto& participant : participants)
-        stream << participant;
-    stream.flush();
-}
 
 void Widget::initializeMenusAndBars()
 {

@@ -37,7 +37,6 @@ private:
     std::unique_ptr<Activity> activity;
 
 	void initializeMenusAndBars();
-    void addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants);
     std::pair<QStringList, QStringListModel*> getFromFile(QFile &file, QStringList& participantList);
 private slots:
     void onTopAction();

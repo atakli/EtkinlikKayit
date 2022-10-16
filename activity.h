@@ -25,6 +25,7 @@ private:
 	Widget* widget;
     QStringListModel* stringListModel;
 
+    void addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants);
     QStringList getLastThreeActivityDates(const QString& etkinlikFileName);
 signals:
     void statusBarMessage(const QString& msg);
