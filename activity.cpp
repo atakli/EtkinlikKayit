@@ -1,4 +1,5 @@
 #include "activity.h"
+#include "widget.h"
 
 #include <QTextStream>
 #include <QMessageBox>
@@ -6,20 +7,50 @@
 
 extern QString appName;
 
-Activity::Activity(QObject *parent) : QObject(parent)
+Activity::Activity(Widget* widget, QObject *parent) : QObject(parent), widget(widget)
 {
     openFile(activityListFile, "etkinlikler.txt", QIODevice::ReadWrite);
     openFile(logFile, "logs.txt", QIODevice::ReadWrite);
     openFile(participantListFile, "katilimcilar.txt", QIODevice::ReadWrite);
 }
+void Activity::addActivity()
+{
+	QString etkinlikFileName = widget->ui->etkinlikComboBox->currentText();
 
+	if (etkinlikFileName.isEmpty())
+	{
+		QMessageBox{}.warning(nullptr, appName, QString("Etkinlik ismi girmediniz!"));
+		return;
+	}
+	QString date = widget->ui->dateEdit->text();	// TODO: bunun da düzgün bi tarih olup olmadığını kontrol edeyim
+	QFile etkinlikFile(etkinlikFileName);
+
+	openFile(etkinlikFile, etkinlikFileName + ".txt", QIODevice::ReadWrite);
+
+	etkinlikFile.seek(etkinlikFile.size());
+	QTextStream stream(&etkinlikFile);
+	auto selectedParticipants = widget->participantsWidget->getSelectedParticipants();
+	QStringList participants;
+	if (selectedParticipants.empty())
+	{
+		QMessageBox{}.warning(nullptr, appName, QString("Katılımcı seçmediniz!"));
+		return;
+	}
+	else
+		for (auto index : selectedParticipants)
+		{
+			stream << date << ", " << widget->participantList.at(index) << "\n";
+			participants << widget->participantList.at(index);
+		}
+
+	addActivityParticipant(etkinlikFileName, participants);
+	stream.flush();
+	statusBarMessage(QString("Seçili kişi(ler) \"%1\" etkinliğine kaydedildi").arg(etkinlikFileName));
+}
 void Activity::addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*> categories)
 {
     QTextStream stream(&participantListFile);
-    QMessageBox qmbox;
 
-//    auto categories = getYasCategories();
-//    emit getYasCategories(categories);
     auto checkedButtonIter = std::find_if(std::cbegin(categories), std::cend(categories), [](const auto&button){return button->isChecked();});
     /*Warns when a lambda inside a connect() captures local variables by reference.
     Example:
@@ -29,12 +60,12 @@ void Activity::addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*
     QRadioButton* checkedButton = *checkedButtonIter;
     if(comboBox->currentText().isEmpty())
     {
-        qmbox.warning(nullptr, appName, "Kişi ismi girilmemiş!");
+		QMessageBox{}.warning(nullptr, appName, "Kişi ismi girilmemiş!");
         return;
     }
     else if (checkedButtonIter == categories.cend())
     {
-        qmbox.warning(nullptr, appName, QString("%1 için yaş kategorisi seçilmemiş!").arg(comboBox->currentText()));
+		QMessageBox{}.warning(nullptr, appName, QString("%1 için yaş kategorisi seçilmemiş!").arg(comboBox->currentText()));
         return;
     }
 
@@ -56,11 +87,10 @@ void Activity::addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*
 void Activity::addToActivityListFile(QComboBox *comboBox)
 {
     QTextStream stream(&activityListFile);
-    QMessageBox qmbox;
 
     if(comboBox->currentText().isEmpty())
     {
-        qmbox.warning(nullptr, appName, "Etkinlik ismi girilmemiş!");
+		QMessageBox{}.warning(nullptr, appName, "Etkinlik ismi girilmemiş!");
         return;
     }
     emit statusBarMessage(QString("\"%1\" kaydedildi").arg(comboBox->currentText()));
@@ -78,8 +108,7 @@ void Activity::openFile(QFile& file, const QString& fileName, QIODevice::OpenMod
     if (!file.open(flag))
     {
         file.close();
-        QMessageBox qmbox;
-        qmbox.critical(nullptr, appName, QString("%1 dosyası açılamadı!").arg(fileName));
+		QMessageBox{}.critical(nullptr, appName, QString("%1 dosyası açılamadı!").arg(fileName));
     }
 }
 QStringList Activity::getLastThreeActivityDates(const QString& etkinlikFileName)

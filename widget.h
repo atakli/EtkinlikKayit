@@ -26,19 +26,17 @@ class Widget : public QWidget
 public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
+
+	Ui::Widget *ui;
+	QStringList participantList;
+	ParticipantsWidget *participantsWidget;
 private:
-    Ui::Widget *ui;
     QStatusBar* statusBar;
     UpdateController update;
     QCompleter* completer = nullptr;
     std::unique_ptr<Activity> activity;
-    ParticipantsWidget *participantsWidget;
-    QStringList participantList;
-//    const char* appName = "Etkinlik Kayıt Programı";
 
-    void addActivity();
-    void initializeMenusAndBars();
-    QStringListModel *modelFromFile(QFile &file);
+	void initializeMenusAndBars();
     void addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants);
     std::pair<QStringList, QStringListModel*> getFromFile(QFile &file, QStringList& participantList);
 private slots:

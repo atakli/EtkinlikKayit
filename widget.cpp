@@ -13,7 +13,7 @@
 
 QString appName = "Etkinlik Kayıt Programı";
 
-Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), activity{std::make_unique<Activity>()}
+Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), activity{std::make_unique<Activity>(this)}
 {
     ui->setupUi(this);
 
@@ -29,13 +29,11 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), activity{
     connect(ui->etkinlikEklePushButton, &QPushButton::clicked, this, [this]{activity->addToActivityListFile(ui->etkinlikComboBox);});
     connect(ui->kisiEklePushButton, &QPushButton::clicked, this, [this]{activity->addToParticipantListFile(ui->adSoyadComboBox, ui->yasKategoriGroupBox->findChildren<QRadioButton*>());});
     connect(ui->katilimcilariGetirPushButton, &QPushButton::clicked, participantsWidget, &ParticipantsWidget::show);
-    connect(ui->kaydetPushButton, &QPushButton::clicked, this, &Widget::addActivity);
 
     connect(activity.get(), &Activity::statusBarMessage, this, [this](const QString& msg){statusBar->showMessage(msg);});
     connect(activity.get(), &Activity::addItemToParticipantsWidget, this, [this](const QString& msg){participantsWidget->addItem(msg);});
-//    connect(activity.get(), &Activity::getYasCategories, this, [this](auto categories){categories = ui->yasKategoriGroupBox->findChildren<QRadioButton*>();});
-    // Qt::ConnectionType::BlockingQueuedConnection
     connect(activity.get(), &Activity::startCompleter, this, &Widget::startCompleter);
+	connect(ui->kaydetPushButton, &QPushButton::clicked, activity.get(), &Activity::addActivity);
 
 //    connect(ui->adSoyadComboBox, &QComboBox::highlighted, this, &Widget::highlightedIndex);
 //    connect(ui->adSoyadComboBox, &QComboBox::textHighlighted, this, &Widget::highlightedString);
@@ -73,43 +71,6 @@ void Widget::startCompleter(QFile& file, QComboBox* comboBox)
 
     delete comboBox->completer();
     comboBox->setCompleter(completer);
-}
-
-void Widget::addActivity()
-{
-    QString etkinlikFileName = ui->etkinlikComboBox->currentText();
-
-    if (etkinlikFileName.isEmpty())
-    {
-        QMessageBox qmbox;
-        qmbox.warning(nullptr, appName, QString("Etkinlik ismi girmediniz!"));
-        return;
-    }
-    QString date = ui->dateEdit->text();                            // TODO: bunun da düzgün bi tarih olup olmadığını kontrol edeyim
-    QFile etkinlikFile(etkinlikFileName);
-
-    activity->openFile(etkinlikFile, etkinlikFileName + ".txt", QIODevice::ReadWrite);
-
-    etkinlikFile.seek(etkinlikFile.size());
-    QTextStream stream(&etkinlikFile);
-    auto selectedParticipants = participantsWidget->getSelectedParticipants();
-    QStringList participants;
-    if (selectedParticipants.empty())
-    {
-        QMessageBox qmbox;
-        qmbox.warning(nullptr, appName, QString("Katılımcı seçmediniz!"));
-        return;
-    }
-    else
-        for (auto index : selectedParticipants)
-        {
-            stream << date << ", " << participantList.at(index) << "\n";
-            participants << participantList.at(index);
-        }
-
-    addActivityParticipant(etkinlikFileName, participants);
-    stream.flush();
-    statusBar->showMessage(QString("Seçili kişi(ler) \"%1\" etkinliğine kaydedildi").arg(etkinlikFileName));
 }
 
 void Widget::addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants)
@@ -188,28 +149,25 @@ void Widget::onTopAction()
         participantsWidget->show();
     show();
 }
-QStringListModel *Widget::modelFromFile(QFile& file)
-{
-#ifndef QT_NO_CURSOR
-    QGuiApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-#endif
-    QStringList words;
-    file.seek(0);
-    while (!file.atEnd())
-    {
-        QByteArray line = file.readLine();
-        if (!line.isEmpty())
-            words << QString::fromUtf8(line.trimmed());
-    }
-#ifndef QT_NO_CURSOR
-    QGuiApplication::restoreOverrideCursor();
-#endif
-    return new QStringListModel(words, completer);
-}
 
 std::pair<QStringList, QStringListModel*> Widget::getFromFile(QFile& file, QStringList& participantList)
 {
-    QStringListModel* stringListModel = modelFromFile(file);
+#ifndef QT_NO_CURSOR
+	QGuiApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+#endif
+	QStringList words;
+	file.seek(0);
+	while (!file.atEnd())
+	{
+		QByteArray line = file.readLine();
+		if (!line.isEmpty())
+			words << QString::fromUtf8(line.trimmed());
+	}
+#ifndef QT_NO_CURSOR
+	QGuiApplication::restoreOverrideCursor();
+#endif
+
+	QStringListModel* stringListModel = new QStringListModel(words, completer);
     QStringList stringList = stringListModel->stringList();
     if (file.fileName() == activity->participantListFile.fileName())
         participantList = stringList;
