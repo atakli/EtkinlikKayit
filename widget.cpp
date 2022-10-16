@@ -4,7 +4,6 @@
 #include <algorithm>
 
 #include <QStringListModel>
-#include <QMessageBox>
 #include <QCompleter>
 #include <QStatusBar>
 #include <QMenuBar>

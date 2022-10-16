@@ -170,6 +170,7 @@ void Activity::openFile(QFile& file, const QString& fileName, QIODevice::OpenMod
     {
         file.close();
 		QMessageBox{}.critical(nullptr, appName, QString("%1 dosyası açılamadı!").arg(fileName));
+		exit(EXIT_FAILURE);
     }
 }
 QStringList Activity::getLastThreeActivityDates(const QString& etkinlikFileName)
