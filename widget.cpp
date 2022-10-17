@@ -71,8 +71,6 @@ void Widget::startCompleter(QFile& file, QComboBox* comboBox)
     comboBox->setCompleter(completer);
 }
 
-
-
 void Widget::initializeMenusAndBars()
 {
     QMenuBar* menuBar = new QMenuBar;
