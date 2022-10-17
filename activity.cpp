@@ -17,58 +17,61 @@ Activity::Activity(Widget* widget, QObject *parent) : QObject(parent), widget(wi
 void Activity::addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants)
 {
     QString etkinlikKatilimcilarilariFileName = fileName + "_Participants";
+    QString participantsToBePunishedFileName = "Cezalı_Listesi";
     QFile etkinlikKatilimcilariFile(etkinlikKatilimcilarilariFileName);
+    QFile participantsToBePunishedFile(participantsToBePunishedFileName);                                   // TODO: burda isim verip sonra tekrar isim atamak gibi gerksiz bi iş yapılıyo
     openFile(etkinlikKatilimcilariFile, etkinlikKatilimcilarilariFileName + ".txt", QIODevice::ReadWrite);
+    openFile(participantsToBePunishedFile, participantsToBePunishedFileName + ".txt", QIODevice::ReadWrite);
 
-    QStringList participants;
+    QStringList participants, participantsWithNumber, participantsToBePunished;
     etkinlikKatilimcilariFile.seek(0);
     while (!etkinlikKatilimcilariFile.atEnd())
     {
         QString line = etkinlikKatilimcilariFile.readLine();
         if (!line.isEmpty())
+        {
+            participantsWithNumber << line.trimmed();
             participants << line.trimmed().split(",").at(0);
+        }
     }
-    for (const auto& participant : widget->participantList)
+    for (int i = 0; i < widget->participantList.size(); ++i)
     {
+        QString participant = widget->participantList[i];
         auto iter = std::find(participants.begin(), participants.end(), participant);
+        auto iter2 = std::find_if(participantsWithNumber.begin(), participantsWithNumber.end(), [&participant](const QString& str){return str.split(",").at(0) == participant;});
         if (iter != participants.end())                 // bu etkinliğe kayıtlı
         {
-            qDebug() << "1";
             auto iter1 = std::find(selectedParticipants.begin(), selectedParticipants.end(), *iter);
+            int number = (*iter2).split(",").last().toInt();     // 3\n ifadesi toInt ile sayıya başarıyla dönüşür mü kontrol et
             if (iter1 == selectedParticipants.end())    // bu etkinliğe kayıtlı ama buna katılmamış
             {
-                qDebug() << "3";
-                int number = (*iter).split(",").last().toInt();
+                *iter = participant + "," + QString::number(number == 0 ? number : --number);
                 if (number == 0)
-                    continue;
-                *iter = participant + "," + QString::number(--number);
-                qDebug() << "burda 3:" << participants;
+                    participantsToBePunished << participant;
             }
             else                                        // bu etkinliğe kayıtlı ve buna da katılmış
             {
-                qDebug() << "4";
-                int number = (*iter).split(",").last().toInt();     // 3\n ifadesi toInt ile sayıya başarıyla dönüşür mü kontrol et
-                if (number == 3)
-                    continue;
-                *iter = participant + "," + QString::number(++number);
-                qDebug() << "burda 2:" << participants;
+                *iter = participant + "," + QString::number(number == 3 ? number : ++number);
             }
+//            number = iter1 == selectedParticipants.end() ? number == 0 ? number : --number : number == 3 ? number : ++number;
+//            *iter = participant + "," + QString::number(number);
         }
         else                                            // bu etkinliğe kayıtlı değil
         {
-            qDebug() << "2";
-            auto iter1 = std::find(selectedParticipants.begin(), selectedParticipants.end(), *iter);
+            auto iter1 = std::find(selectedParticipants.begin(), selectedParticipants.end(), participant);
             if (iter1 != selectedParticipants.end())    // bu etkinliğe kayıtlı değil, ilk defa katılıyor. else kısmı da ne kayıtlı ne de yeni katılanlar. ama tabiki yazacak bişey yok
             {
                 participants << participant + ",3";
-                qDebug() << "burda 1:" << participant;
             }
         }
     }
     etkinlikKatilimcilariFile.seek(0);                                  // TODO: sadece orayı değiştirmek diye bişey var mı? çünkü şuan baştan yazıyorum sanırım
     QTextStream stream(&etkinlikKatilimcilariFile);
+    QTextStream stream1(&participantsToBePunishedFile);
     for (const auto& participant : participants)
         stream << participant + "\n";
+    for (const auto& participant : participantsToBePunished)
+        stream1 << participant + "\n";
     stream.flush();
 }
 void Activity::addActivity()
@@ -148,10 +151,12 @@ void Activity::addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*
 void Activity::addToActivityListFile(QComboBox *comboBox)
 {
     QTextStream stream(&activityListFile);
+    activityListFile.seek(0);
+    QStringList activities = QString(activityListFile.readAll()).split("\n");
 
-    if(comboBox->currentText().isEmpty())
+    if(comboBox->currentText().isEmpty() || activities.contains(comboBox->currentText()))
     {
-		QMessageBox{}.warning(nullptr, appName, "Etkinlik ismi girilmemiş!");
+        QMessageBox{}.warning(nullptr, appName, "Etkinlik ismi girilmemiş veya bu etkinlik zaten var!");
         return;
     }
     emit statusBarMessage(QString("\"%1\" kaydedildi").arg(comboBox->currentText()));
