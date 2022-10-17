@@ -26,7 +26,8 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), activity{
 
     connect(ui->etkinlikEklePushButton, &QPushButton::clicked, this, [this]{activity->addToActivityListFile(ui->etkinlikComboBox);});
     connect(ui->kisiEklePushButton, &QPushButton::clicked, this, [this]{activity->addToParticipantListFile(ui->adSoyadComboBox, ui->yasKategoriGroupBox->findChildren<QRadioButton*>());});
-    connect(ui->katilimcilariGetirPushButton, &QPushButton::clicked, participantsWidget, &ParticipantsWidget::show);
+	connect(ui->katilimcilariGetirPushButton, &QPushButton::clicked, participantsWidget, &ParticipantsWidget::show);
+	connect(ui->punishedPushButton, &QPushButton::clicked, activity.get(), &Activity::openPunishedList);
 
     connect(activity.get(), &Activity::statusBarMessage, this, [this](const QString& msg){statusBar->showMessage(msg);});
     connect(activity.get(), &Activity::addItemToParticipantsWidget, this, [this](const QString& msg){participantsWidget->addItem(msg);});
@@ -95,7 +96,7 @@ void Widget::initializeMenusAndBars()
     ui->horizontalLayoutBottom->addWidget(statusBar);
 }
 
-void Widget::onTopAction()
+void Widget::onTopAction()				// TODO: linux'ta bunda sıkıntı var. sadece biri oTop oldu
 {
     static bool alwaysOnTop = false;
     if (!alwaysOnTop)

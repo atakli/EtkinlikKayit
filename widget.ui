@@ -218,8 +218,8 @@
          <rect>
           <x>20</x>
           <y>30</y>
-          <width>384</width>
-          <height>24</height>
+          <width>534</width>
+          <height>42</height>
          </rect>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout">
@@ -298,7 +298,7 @@
       </layout>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="punishedPushButton">
        <property name="text">
         <string>Son Üç Etkinliğe Gelmeyenleri Göster</string>
        </property>

@@ -3,6 +3,7 @@
 #include "widget.h"
 
 #include <QTextStream>
+#include <QListWidget>
 #include <QMessageBox>
 #include <QComboBox>
 
@@ -17,9 +18,9 @@ Activity::Activity(Widget* widget, QObject *parent) : QObject(parent), widget(wi
 void Activity::addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants)
 {
     QString etkinlikKatilimcilarilariFileName = fileName + "_Participants";
-    QString participantsToBePunishedFileName = "Cezalı_Listesi";
+	QString participantsToBePunishedFileName = fileName + " Etkinliği Cezalı Listesi ";
     QFile etkinlikKatilimcilariFile(etkinlikKatilimcilarilariFileName);
-    QFile participantsToBePunishedFile(participantsToBePunishedFileName);                                   // TODO: burda isim verip sonra tekrar isim atamak gibi gerksiz bi iş yapılıyo
+	QFile participantsToBePunishedFile(participantsToBePunishedFileName);		// TODO: burda isim verip sonra tekrar isim atamak gibi gerksiz bi iş yapılıyo
     openFile(etkinlikKatilimcilariFile, etkinlikKatilimcilarilariFileName + ".txt", QIODevice::ReadWrite);
     openFile(participantsToBePunishedFile, participantsToBePunishedFileName + ".txt", QIODevice::ReadWrite);
 
@@ -53,8 +54,6 @@ void Activity::addActivityParticipant(const QString& fileName, const QStringList
             {
                 *iter = participant + "," + QString::number(number == 3 ? number : ++number);
             }
-//            number = iter1 == selectedParticipants.end() ? number == 0 ? number : --number : number == 3 ? number : ++number;
-//            *iter = participant + "," + QString::number(number);
         }
         else                                            // bu etkinliğe kayıtlı değil
         {
@@ -97,8 +96,12 @@ void Activity::addActivity()
 	QStringList participants;
 	if (selectedParticipants.empty())
 	{
-		QMessageBox{}.warning(nullptr, appName, QString("Katılımcı seçmediniz!"));
-		return;
+		if (QMessageBox(QMessageBox::Question, appName, "Katılımcı seçmediniz! Kimse Gelmedi mi?", QMessageBox::Retry | QMessageBox::Apply).exec() == QMessageBox::Retry)
+		{
+			return;
+		}
+//		QMessageBox{}.warning(nullptr, appName, QString("Katılımcı seçmediniz!"));
+//		return;
 	}
 	else
 		for (auto index : selectedParticipants)
@@ -133,7 +136,7 @@ void Activity::addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*
         return;
     }
 
-    emit statusBarMessage(QString("\"%1\" kategorisindeki \"%2\" kaydedildi").arg(checkedButton->text(), comboBox->currentText()));
+	emit statusBarMessage(QString("\"%1\" kategorisindeki \"%2\" kaydedildi").arg(checkedButton->text(), comboBox->currentText()));
     stream << comboBox->currentText() << " (" << checkedButton->text() << ")\n";
 
     checkedButton->setAutoExclusive(false);
@@ -145,7 +148,64 @@ void Activity::addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*
     stream.flush();
     emit startCompleter(participantListFile, comboBox);
 
-    comboBox->clearEditText();
+	comboBox->clearEditText();
+}
+
+void Activity::openPunishedList()
+{
+	activityListFile.seek(0);
+	QStringList activities = QString(activityListFile.readAll()).split("\n");
+
+	QString activityName = widget->ui->etkinlikComboBox->currentText();
+	if (activityName.isEmpty() || !activities.contains(activityName))
+	{
+		QMessageBox::warning(nullptr, appName, QString("Etkinlik ismi girmediniz veya yanlış girdiniz!"));
+		return;
+	}
+	QString participantsToBePunishedFileName = activityName + " Etkinliği Cezalı Listesi ";
+	QFile participantsToBePunishedFile(participantsToBePunishedFileName);
+	openFile(participantsToBePunishedFile, participantsToBePunishedFileName + ".txt", QIODevice::ReadWrite);
+	participantsToBePunishedFile.seek(0);
+	QStringList participantsToBePunished;
+	while (!participantsToBePunishedFile.atEnd())
+	{
+		QString line = participantsToBePunishedFile.readLine();
+		if (!line.isEmpty())
+		{
+			participantsToBePunished << line.trimmed();
+		}
+	}
+	if (participantsToBePunished.isEmpty())
+	{
+		QMessageBox::information(nullptr, appName, QString("Cezalı kimse yok"));
+		return;
+	}
+
+	qDebug() << participantsToBePunished;
+
+	QWidget *layoutWidget = new QWidget();
+	layoutWidget->setObjectName(QString::fromUtf8("layoutWidget"));
+	layoutWidget->setWindowTitle(activityName);
+
+	QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+	sizePolicy.setHorizontalStretch(0);
+	sizePolicy.setVerticalStretch(0);
+//	sizePolicy.setHeightForWidth(adSoyadComboBox->sizePolicy().hasHeightForWidth());
+	layoutWidget->setSizePolicy(sizePolicy);
+//	layoutWidget->setMinimumSize(QSize(460, 1000));
+//	layoutWidget->resize(layoutWidget->minimumSizeHint());
+//	layoutWidget->adjustSize();
+
+	QListWidget *listWidget = new QListWidget(layoutWidget);
+	for (const QString& participant : participantsToBePunished)
+	{
+		new QListWidgetItem(participant, listWidget);
+	}
+
+	QVBoxLayout *verticalLayout = new QVBoxLayout();
+	verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
+	verticalLayout->addWidget(listWidget);
+	layoutWidget->show();
 }
 
 void Activity::addToActivityListFile(QComboBox *comboBox)

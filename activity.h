@@ -32,6 +32,7 @@ signals:
     void addItemToParticipantsWidget(const QString& msg);
     void startCompleter(QFile& file, QComboBox* comboBox);
 public slots:
+	void openPunishedList();
 	void addActivity();
 };
 
