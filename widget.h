@@ -37,7 +37,7 @@ private:
     std::unique_ptr<Activity> activity;
 
 	void initializeMenusAndBars();
-    std::pair<QStringList, QStringListModel*> getFromFile(QFile &file, QStringList& participantList);
+	std::pair<QStringList, QStringListModel*> getFromFile(QFile &file, QStringList& participantList);
 private slots:
     void onTopAction();
     void highlightedIndex(int index);

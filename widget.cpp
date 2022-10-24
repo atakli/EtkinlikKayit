@@ -133,11 +133,11 @@ std::pair<QStringList, QStringListModel*> Widget::getFromFile(QFile& file, QStri
 #endif
 
 	QStringListModel* stringListModel = new QStringListModel(words, completer);
-    QStringList stringList = stringListModel->stringList();
-    if (file.fileName() == activity->participantListFile.fileName())
-        participantList = stringList;
-    participantList.sort(Qt::CaseInsensitive);
-    return std::make_pair(stringList, stringListModel);
+	QStringList stringList = stringListModel->stringList();
+	if (file.fileName() == activity->participantListFile.fileName())
+		participantList = stringList;
+	participantList.sort(Qt::CaseInsensitive);
+	return std::make_pair(stringList, stringListModel);
 }
 void Widget::highlightedIndex(int index)
 {

@@ -19,12 +19,13 @@ void HttpManager::startRequest(const QUrl &requestedUrl)
 //	req.setHeader(QNetworkRequest::LocationHeader, "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0");
 
 	reply.reset(qnam.get(req));
-	QEventLoop eventLoop;
     connect(reply.get(), &QIODevice::readyRead, this, &HttpManager::httpReadyRead);
 #if QT_CONFIG(ssl)
     connect(reply.get(), &QNetworkReply::sslErrors, this, &HttpManager::sslErrors);
 #endif
+	QEventLoop eventLoop;
 	connect(reply.get(), SIGNAL(finished()), &eventLoop, SLOT(quit()));
+	connect(reply.get(), QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), this, &HttpManager::connectionControl);
 	eventLoop.exec();
 	httpFinished();
 }
@@ -61,15 +62,14 @@ void HttpManager::downloadSynchronous(QString fileName, QString urlSpec, const Q
 
 	if(newVersion)
 	{
-		QMessageBox qmbox;
-		qmbox.information(nullptr, tr("Yeni versiyon"), QString(directory + " klasörüne indirildi."));
+		QMessageBox::information(nullptr, tr("Yeni versiyon"), QString(directory + " klasörüne indirildi."));
 	}
 }
 
-std::unique_ptr<QFile> HttpManager::openFileForWrite(const QString &fileName)
+std::unique_ptr<QFile> HttpManager::openFileForWrite(const QString &fileName, QIODevice::OpenModeFlag flag)
 {
 	std::unique_ptr<QFile> file = std::make_unique<QFile>(fileName);
-	if (!file->open(QIODevice::WriteOnly))
+	if (!file->open(flag))
 	{
         QMessageBox::information(this, tr("Error"), tr("Dosyayı kaydedemiyoruz: %1: %2.").arg(QDir::toNativeSeparators(fileName), file->errorString()));
 		return nullptr;
@@ -89,20 +89,34 @@ void HttpManager::httpFinished()
 void HttpManager::httpReadyRead()
 {
     // This slot gets called every time the QNetworkReply has new data. We read all of its new data and write it into the file. That way we use less RAM than when reading it at the finished() signal of the QNetworkReply
+//	auto bytes = reply->bytesAvailable();
 	if (file)
 		file->write(reply->readAll());
+//	qDebug() << "bytes: " << bytes;
 }
-
+void HttpManager::connectionControl(QNetworkReply::NetworkError)
+{
+	QMessageBox::warning(nullptr, tr("Hata!"), QString("İnternete bağlanamadık. İnternet bağlantınızı kontrol edin."));
+	hasError = true;	// internet olmadığında HostNotFoundError oldu
+//	QString logFileName = "logs.txt";
+//	std::unique_ptr<QFile> logFile = openFileForWrite(logFileName, QIODevice::Append);
+//	QString errorString = QDateTime::currentDateTime().toString() + " -> " + QVariant(error).toString();
+//	logFile->write(errorString.toStdString().c_str());
+}
 #if QT_CONFIG(ssl)
 void HttpManager::sslErrors(const QList<QSslError> &errors)
 {
-	QString errorString;
-	for (const QSslError &error : errors)
+	const QString errorString = [&]()	// errorString'i const yapmak ve initialize edip sonra assign etmemek için böyle yaptım ama bu case'de gereksiz olabilir. yine de kalsın
 	{
-		if (!errorString.isEmpty())
-			errorString += '\n';
-		errorString += error.errorString();
-	}
+		QString errorString;
+		for (const QSslError &error : errors)
+		{
+			if (!errorString.isEmpty())
+				errorString += '\n';
+			errorString += error.errorString();
+		}
+		return errorString;
+	}();
 
 	if (QMessageBox::warning(this, tr("SSL Errors"), tr("One or more SSL errors has occurred:\n%1").arg(errorString), QMessageBox::Ignore | QMessageBox::Abort) == QMessageBox::Ignore)
 	{
