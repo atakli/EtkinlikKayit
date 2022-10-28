@@ -46,13 +46,13 @@ void Activity::addActivityParticipant(const QString& fileName, const QStringList
             int number = (*iter2).split(",").last().toInt();     // 3\n ifadesi toInt ile sayıya başarıyla dönüşür mü kontrol et
             if (iter1 == selectedParticipants.end())    // bu etkinliğe kayıtlı ama buna katılmamış
             {
-                *iter = participant + "," + QString::number(number == 0 ? number : --number);
+				*iter = participant + "," + QString::number(number == 0 ? number : --number) + '\n';
                 if (number == 0)
                     participantsToBePunished << participant;
             }
             else                                        // bu etkinliğe kayıtlı ve buna da katılmış
             {
-                *iter = participant + "," + QString::number(number == 3 ? number : ++number);
+				*iter = participant + "," + QString::number(number == 3 ? number : ++number) + '\n';
             }
         }
         else                                            // bu etkinliğe kayıtlı değil
@@ -60,17 +60,17 @@ void Activity::addActivityParticipant(const QString& fileName, const QStringList
             auto iter1 = std::find(selectedParticipants.begin(), selectedParticipants.end(), participant);
             if (iter1 != selectedParticipants.end())    // bu etkinliğe kayıtlı değil, ilk defa katılıyor. else kısmı da ne kayıtlı ne de yeni katılanlar. ama tabiki yazacak bişey yok
             {
-                participants << participant + ",3";
+				participants << participant + ",3\n";
             }
         }
     }
     etkinlikKatilimcilariFile.seek(0);                                  // TODO: sadece orayı değiştirmek diye bişey var mı? çünkü şuan baştan yazıyorum sanırım
     QTextStream stream(&etkinlikKatilimcilariFile);
     QTextStream stream1(&participantsToBePunishedFile);
-    for (const auto& participant : participants)
-        stream << participant + "\n";
-    for (const auto& participant : participantsToBePunished)
-        stream1 << participant + "\n";
+
+	std::for_each(participants.cbegin(), participants.cend(), [&stream](const auto&str){stream << str;});
+	std::for_each(participantsToBePunished.cbegin(), participantsToBePunished.cend(), [&stream1](const auto&str){stream1 << str;});
+
     stream.flush();
 }
 void Activity::addActivity()
