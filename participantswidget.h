@@ -15,10 +15,7 @@ public:
 private:
     int rowIndex = 0;
     Ui::Form *ui;
-    void addItems();
-    QStringList* participantList;
-private slots:
-    void selectAllCheckBoxes(bool state);
+	QStringList* participantList;
 signals:
     void participantListUpdated();
 };

@@ -7,9 +7,16 @@
 ParticipantsWidget::ParticipantsWidget(QStringList* participantList, QWidget* parent) : QWidget(parent), ui(new Ui::Form), participantList(participantList)
 {
     ui->setupUi(this);
-    addItems();
-    connect(ui->tumunuSecPushButton, &QPushButton::clicked, this, [this](){ParticipantsWidget::selectAllCheckBoxes(true);});
-    connect(ui->hicbiriniSecmePushButton, &QPushButton::clicked, this, [this](){ParticipantsWidget::selectAllCheckBoxes(false);});
+	std::for_each(participantList->cbegin(), participantList->cend(), [this](const QString& participant){addItem(participant);});
+
+	static auto selectAllCheckBoxes = [this](bool state)
+	{
+		for (int i = 0; i < this->participantList->size(); ++i)
+			static_cast<QCheckBox*>(ui->tableWidget->cellWidget(i, 0))->setChecked(state);
+	};
+
+	connect(ui->tumunuSecPushButton, &QPushButton::clicked, [&](){selectAllCheckBoxes(true);});
+	connect(ui->hicbiriniSecmePushButton, &QPushButton::clicked, [&](){selectAllCheckBoxes(false);});
 }
 
 void ParticipantsWidget::addItem(const QString& participant)
@@ -26,12 +33,6 @@ void ParticipantsWidget::addItem(const QString& participant)
     ++rowIndex;
 }
 
-void ParticipantsWidget::addItems()
-{
-    for (int i = 0; i < participantList->size(); ++i)
-        addItem(participantList->at(i));
-}
-
 std::vector<int> ParticipantsWidget::getSelectedParticipants()
 {
     std::vector<int> selectedParticipants;
@@ -39,10 +40,4 @@ std::vector<int> ParticipantsWidget::getSelectedParticipants()
         if (static_cast<QCheckBox*>(ui->tableWidget->cellWidget(i, 0))->isChecked())
             selectedParticipants.push_back(i);
     return selectedParticipants;
-}
-
-void ParticipantsWidget::selectAllCheckBoxes(bool state)
-{
-    for (int i = 0; i < participantList->size(); ++i)
-        static_cast<QCheckBox*>(ui->tableWidget->cellWidget(i, 0))->setChecked(state);
 }
