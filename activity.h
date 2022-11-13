@@ -17,12 +17,13 @@ class Activity : public QObject
 public:
 	Activity(Widget* widget, QObject *parent = nullptr);
     void addToActivityListFile(QComboBox* comboBox);
-    void openFile(QFile& file, const QString &fileName, QIODevice::OpenModeFlag omf);
+	std::unique_ptr<QFile> openFile(const QString &fileName, QIODevice::OpenModeFlag omf);
     void addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*> categories);
 
-    QFile activityListFile, participantListFile, logFile;
+	std::unique_ptr<QFile> activityListFile, participantListFile, logFile;
 private:
 	Widget* widget;
+	QString punishedListFileNamePostFix = " Etkinliği Cezalı Listesi";
     QStringListModel* stringListModel;
 
     void addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants);

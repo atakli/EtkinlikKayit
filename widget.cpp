@@ -18,7 +18,7 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), activity{
 
     initializeMenusAndBars();
 
-    getFromFile(activity->participantListFile, participantList);
+	getFromFile(*activity->participantListFile, participantList);
     participantsWidget = new ParticipantsWidget(&participantList);
 
     update.setParameters("https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest", appName, "etkinlikKayit.zip");
@@ -44,8 +44,8 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), activity{
     ui->etkinlikComboBox->setCompleter(nullptr);    // nullptr yapmamın sebebi startCompleter'ın içinde delete edebilmek
     ui->adSoyadComboBox->setCompleter(nullptr);
 
-    startCompleter(activity->activityListFile, ui->etkinlikComboBox);
-    startCompleter(activity->participantListFile, ui->adSoyadComboBox);
+	startCompleter(*activity->activityListFile, ui->etkinlikComboBox);
+	startCompleter(*activity->participantListFile, ui->adSoyadComboBox);
 
     ui->etkinlikComboBox->setCurrentIndex(-1);
     ui->adSoyadComboBox->setCurrentIndex(-1);
@@ -134,7 +134,7 @@ std::pair<QStringList, QStringListModel*> Widget::getFromFile(QFile& file, QStri
 
 	QStringListModel* stringListModel = new QStringListModel(words, completer);
 	QStringList stringList = stringListModel->stringList();
-	if (file.fileName() == activity->participantListFile.fileName())
+	if (file.fileName() == activity->participantListFile->fileName())
 		participantList = stringList;
 	participantList.sort(Qt::CaseInsensitive);
 	return std::make_pair(stringList, stringListModel);

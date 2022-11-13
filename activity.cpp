@@ -9,26 +9,22 @@
 
 extern QString appName;
 
-Activity::Activity(Widget* widget, QObject *parent) : QObject(parent), widget(widget)
-{
-    openFile(activityListFile, "etkinlikler.txt", QIODevice::ReadWrite);
-    openFile(logFile, "logs.txt", QIODevice::ReadWrite);
-    openFile(participantListFile, "katilimcilar.txt", QIODevice::ReadWrite);
-}
+Activity::Activity(Widget* widget, QObject *parent) : QObject(parent),
+	activityListFile(openFile("etkinlikler.txt", QIODevice::ReadWrite)),
+	participantListFile(openFile("katilimcilar.txt", QIODevice::ReadWrite)),
+	logFile(openFile("logs.txt", QIODevice::ReadWrite)),
+	widget(widget)
+{}
 void Activity::addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants)
 {
-    QString etkinlikKatilimcilarilariFileName = fileName + "_Participants";
-	QString participantsToBePunishedFileName = fileName + " Etkinliği Cezalı Listesi ";
-    QFile etkinlikKatilimcilariFile(etkinlikKatilimcilarilariFileName);
-	QFile participantsToBePunishedFile(participantsToBePunishedFileName);		// TODO: burda isim verip sonra tekrar isim atamak gibi gerksiz bi iş yapılıyo
-    openFile(etkinlikKatilimcilariFile, etkinlikKatilimcilarilariFileName + ".txt", QIODevice::ReadWrite);
-    openFile(participantsToBePunishedFile, participantsToBePunishedFileName + ".txt", QIODevice::ReadWrite);
+	auto etkinlikKatilimcilariFile = openFile(fileName + "_Participants.txt", QIODevice::ReadWrite);
+	auto participantsToBePunishedFile = openFile(fileName + punishedListFileNamePostFix + ".txt", QIODevice::ReadWrite);
 
     QStringList participants, participantsWithNumber, participantsToBePunished;
-    etkinlikKatilimcilariFile.seek(0);
-    while (!etkinlikKatilimcilariFile.atEnd())
+	etkinlikKatilimcilariFile->seek(0);
+	while (!etkinlikKatilimcilariFile->atEnd())
     {
-        QString line = etkinlikKatilimcilariFile.readLine();
+		QString line = etkinlikKatilimcilariFile->readLine();
         if (!line.isEmpty())
         {
             participantsWithNumber << line.trimmed();
@@ -64,9 +60,9 @@ void Activity::addActivityParticipant(const QString& fileName, const QStringList
             }
         }
     }
-    etkinlikKatilimcilariFile.seek(0);                                  // TODO: sadece orayı değiştirmek diye bişey var mı? çünkü şuan baştan yazıyorum sanırım
-    QTextStream stream(&etkinlikKatilimcilariFile);
-    QTextStream stream1(&participantsToBePunishedFile);
+	etkinlikKatilimcilariFile->seek(0);                                  // TODO: sadece orayı değiştirmek diye bişey var mı? çünkü şuan baştan yazıyorum sanırım
+	QTextStream stream(etkinlikKatilimcilariFile.get());
+	QTextStream stream1(participantsToBePunishedFile.get());
 
 	std::for_each(participants.cbegin(), participants.cend(), [&stream](const auto&str){stream << str;});
 	std::for_each(participantsToBePunished.cbegin(), participantsToBePunished.cend(), [&stream1](const auto&str){stream1 << str;});
@@ -75,50 +71,50 @@ void Activity::addActivityParticipant(const QString& fileName, const QStringList
 }
 void Activity::addActivity()
 {
-	QString etkinlikFileName = widget->ui->etkinlikComboBox->currentText();
-
-    activityListFile.seek(0);
-    QStringList activities = QString(activityListFile.readAll()).split("\n");
-
-    if (etkinlikFileName.isEmpty() || !activities.contains(etkinlikFileName))
+	const QString etkinlikFileName = widget->ui->etkinlikComboBox->currentText();
+	if (etkinlikFileName.isEmpty())
 	{
-        QMessageBox{}.warning(nullptr, appName, QString("Etkinlik ismi girmediniz veya yanlış girdiniz!"));
+		QMessageBox::warning(nullptr, appName, QString("Etkinlik ismi girmediniz!"));
 		return;
 	}
-	QString date = widget->ui->dateEdit->text();	// TODO: bunun da düzgün bi tarih olup olmadığını kontrol edeyim
-	QFile etkinlikFile(etkinlikFileName);
 
-	openFile(etkinlikFile, etkinlikFileName + ".txt", QIODevice::ReadWrite);
-
-	etkinlikFile.seek(etkinlikFile.size());
-	QTextStream stream(&etkinlikFile);
-	auto selectedParticipants = widget->participantsWidget->getSelectedParticipants();
-	QStringList participants;
+	activityListFile->seek(0);
+	if (!QString(activityListFile->readAll()).split("\n").contains(etkinlikFileName))
+	{
+		QMessageBox::warning(nullptr, appName, QString("Etkinlik ismini yanlış girdiniz!"));
+		return;
+	}
+	const auto selectedParticipants = widget->participantsWidget->getSelectedParticipants();
 	if (selectedParticipants.empty())
 	{
-		if (QMessageBox(QMessageBox::Question, appName, "Katılımcı seçmediniz! Kimse Gelmedi mi?", QMessageBox::Retry | QMessageBox::Apply).exec() == QMessageBox::Retry)
-		{
-			return;
-		}
-//		QMessageBox{}.warning(nullptr, appName, QString("Katılımcı seçmediniz!"));
-//		return;
+		QMessageBox::warning(nullptr, appName, QString("Katılımcı seçmediniz!")); // TODO: kimse gelmedi butonu ekle
+	//	if (QMessageBox(QMessageBox::Question, appName, "Katılımcı seçmediniz! Kimse Gelmedi mi?", QMessageBox::Retry | QMessageBox::Apply).exec() == QMessageBox::Retry)
 	}
-	else
-		for (auto index : selectedParticipants)
-		{
-			stream << date << ", " << widget->participantList.at(index) << "\n";
-			participants << widget->participantList.at(index);
-		}
+	auto etkinlikFile = openFile(etkinlikFileName + ".txt", QIODevice::ReadWrite);
 
+	etkinlikFile->seek(etkinlikFile->size());
+	QTextStream stream(etkinlikFile.get());
+	const QStringList participants = [&]
+	{
+		const QString date = widget->ui->dateEdit->text();	// TODO: bunun da düzgün bi tarih olup olmadığını kontrol edeyim
+		QStringList participants;
+		for (const auto index : selectedParticipants)
+		{
+			const auto participant = widget->participantList.at(index);
+			stream << date << ", " << participant << "\n";
+			participants << participant;
+		}
+		return participants;
+	}();
 	addActivityParticipant(etkinlikFileName, participants);
 	stream.flush();
     emit statusBarMessage(QString("Seçili kişi(ler) \"%1\" etkinliğine kaydedildi").arg(etkinlikFileName));
 }
 void Activity::addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*> categories)
 {
-    QTextStream stream(&participantListFile);
+	QTextStream stream(participantListFile.get());
 
-    auto checkedButtonIter = std::find_if(std::cbegin(categories), std::cend(categories), [](const auto&button){return button->isChecked();});
+	const auto checkedButtonIter = std::find_if(std::cbegin(categories), std::cend(categories), [](const auto&button){return button->isChecked();});
     /*Warns when a lambda inside a connect() captures local variables by reference.
     Example:
     int a;
@@ -127,12 +123,12 @@ void Activity::addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*
     QRadioButton* checkedButton = *checkedButtonIter;
     if(comboBox->currentText().isEmpty())
     {
-		QMessageBox{}.warning(nullptr, appName, "Kişi ismi girilmemiş!");
+		QMessageBox::warning(nullptr, appName, "Kişi ismi girilmemiş!");
         return;
     }
     else if (checkedButtonIter == categories.cend())
     {
-		QMessageBox{}.warning(nullptr, appName, QString("%1 için yaş kategorisi seçilmemiş!").arg(comboBox->currentText()));
+		QMessageBox::warning(nullptr, appName, QString("%1 için yaş kategorisi seçilmemiş!").arg(comboBox->currentText()));
         return;
     }
 
@@ -146,35 +142,41 @@ void Activity::addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*
     emit addItemToParticipantsWidget(comboBox->currentText() + " (" + checkedButton->text() + ")");
 
     stream.flush();
-    emit startCompleter(participantListFile, comboBox);
+	emit startCompleter(*participantListFile, comboBox);
 
 	comboBox->clearEditText();
 }
 
 void Activity::openPunishedList()
 {
-	activityListFile.seek(0);
-	QStringList activities = QString(activityListFile.readAll()).split("\n");
-
-	QString activityName = widget->ui->etkinlikComboBox->currentText();
-	if (activityName.isEmpty() || !activities.contains(activityName))
+	const QString activityName = widget->ui->etkinlikComboBox->currentText();
+	if (activityName.isEmpty())
 	{
-		QMessageBox::warning(nullptr, appName, QString("Etkinlik ismi girmediniz veya yanlış girdiniz!"));
+		QMessageBox::warning(nullptr, appName, QString("Etkinlik ismi girmediniz!"));
 		return;
 	}
-	QString participantsToBePunishedFileName = activityName + " Etkinliği Cezalı Listesi ";
-	QFile participantsToBePunishedFile(participantsToBePunishedFileName);
-	openFile(participantsToBePunishedFile, participantsToBePunishedFileName + ".txt", QIODevice::ReadWrite);
-	participantsToBePunishedFile.seek(0);
-	QStringList participantsToBePunished;
-	while (!participantsToBePunishedFile.atEnd())
+	activityListFile->seek(0);
+	if (!QString(activityListFile->readAll()).split("\n").contains(activityName))
 	{
-		QString line = participantsToBePunishedFile.readLine();
-		if (!line.isEmpty())
-		{
-			participantsToBePunished << line.trimmed();
-		}
+		QMessageBox::warning(nullptr, appName, QString("Etkinlik ismini yanlış girdiniz!"));
+		return;
 	}
+	const QString participantsToBePunishedFileName = activityName + punishedListFileNamePostFix;
+	auto participantsToBePunishedFile = openFile(participantsToBePunishedFileName + ".txt", QIODevice::ReadWrite);
+	participantsToBePunishedFile->seek(0);
+	const QStringList participantsToBePunished = [&]
+	{
+		QStringList participantsToBePunished;
+		while (!participantsToBePunishedFile->atEnd())
+		{
+			const QString line = participantsToBePunishedFile->readLine();
+			if (!line.isEmpty())
+			{
+				participantsToBePunished << line.trimmed();
+			}
+		}
+		return participantsToBePunished;
+	}();
 	if (participantsToBePunished.isEmpty())
 	{
 		QMessageBox::information(nullptr, appName, QString("Cezalı kimse yok"));
@@ -210,38 +212,40 @@ void Activity::openPunishedList()
 
 void Activity::addToActivityListFile(QComboBox *comboBox)
 {
-    QTextStream stream(&activityListFile);
-    activityListFile.seek(0);
-    QStringList activities = QString(activityListFile.readAll()).split("\n");
-
-    if(comboBox->currentText().isEmpty() || activities.contains(comboBox->currentText()))
+	const QString activityName = comboBox->currentText();
+	if(activityName.isEmpty())
     {
-        QMessageBox{}.warning(nullptr, appName, "Etkinlik ismi girilmemiş veya bu etkinlik zaten var!");
+		QMessageBox::warning(nullptr, appName, "Etkinlik ismi girilmemiş!");
         return;
     }
-    emit statusBarMessage(QString("\"%1\" kaydedildi").arg(comboBox->currentText()));
-    stream << comboBox->currentText() << '\n';
-
+	activityListFile->seek(0);
+	if(QString(activityListFile->readAll()).split("\n").contains(activityName))
+	{
+		QMessageBox::warning(nullptr, appName, "Bu etkinlik zaten var!");
+		return;
+	}
+	QTextStream stream(activityListFile.get());
+	stream << activityName << '\n';
     stream.flush();
-    emit startCompleter(activityListFile, comboBox);
+	emit startCompleter(*activityListFile, comboBox);
+	emit statusBarMessage(QString("\"%1\" kaydedildi").arg(activityName));
 
     comboBox->clearEditText();
 }
-void Activity::openFile(QFile& file, const QString& fileName, QIODevice::OpenModeFlag flag)       // error return ekle veya exception
+std::unique_ptr<QFile> Activity::openFile(const QString& fileName, QIODevice::OpenModeFlag flag)       // error return ekle veya exception
 {
-    file.setFileName(fileName);
-
-    if (!file.open(flag))
-    {
-        file.close();
-		QMessageBox{}.critical(nullptr, appName, QString("%1 dosyası açılamadı!").arg(fileName));
+	auto file = std::make_unique<QFile>(fileName);
+	if (!file->open(flag))
+	{
+		file->close();
+		QMessageBox::critical(nullptr, appName, QString("%1 dosyası açılamadı!").arg(fileName));
 		exit(EXIT_FAILURE);
-    }
+	}
+	return file;
 }
 QStringList Activity::getLastThreeActivityDates(const QString& etkinlikFileName)
 {
-    QFile file(etkinlikFileName);
-    openFile(file, etkinlikFileName + ".txt", QIODevice::ReadWrite);
+	auto file = openFile(etkinlikFileName + ".txt", QIODevice::ReadWrite);
     // vektöre veya set'e atıp sıralayıp sonra son üçünü alabilirim. hatta son üçünü almak için tamamını sıralamama gerek olmayabilri. bunun bahsi geçmişti sanki
     return {};
 }
