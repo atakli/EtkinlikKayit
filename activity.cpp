@@ -183,8 +183,6 @@ void Activity::openPunishedList()
 		return;
 	}
 
-	qDebug() << participantsToBePunished;
-
 	QWidget *layoutWidget = new QWidget();
 	layoutWidget->setObjectName(QString::fromUtf8("layoutWidget"));
 	layoutWidget->setWindowTitle(activityName);
