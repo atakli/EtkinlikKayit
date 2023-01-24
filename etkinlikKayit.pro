@@ -2,14 +2,15 @@ QT       += network core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-linux
-{
+unix{
     QMAKE_CXXFLAGS += -std=c++2a
 }
-win32
-{
+win32{
     CONFIG += c++20
 }
+
+#win32:CONFIG += c++20
+#unix:QMAKE_CXXFLAGS += -std=c++2a
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -21,22 +22,22 @@ win32
 
 SOURCES += \
     activity.cpp \
-    httpmanager.cpp \
     main.cpp \
     participantswidget.cpp \
-    widget.cpp \
-    updatecontroller.cpp
+    widget.cpp
 
 HEADERS += \
     activity.h \
-    httpmanager.h \
     participantswidget.h \
-    widget.h \
-    updatecontroller.h
+    widget.h
 
 FORMS += \
     participantlist.ui \
     widget.ui
+
+INCLUDEPATH += "C:\\Users\\Emre ATAKLI\\Documents\\qt\\UpdateController\\include"
+win32:CONFIG(release, debug|release): LIBS += -L"C:\\Users\\Emre ATAKLI\\Documents\\qt\\UpdateController\\build-UpdateController-Desktop_Qt_6_4_1_MSVC2019_64bit-Release\\release\\static" -lupdatecontroller
+else:win32:CONFIG(debug, debug|release): LIBS += -L"C:\\Users\\Emre ATAKLI\\Documents\\qt\\UpdateController\\build-UpdateController-Desktop_Qt_6_4_1_MSVC2019_64bit-Debug\\debug\\static" -lupdatecontroller
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
