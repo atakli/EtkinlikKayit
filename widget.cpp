@@ -80,6 +80,8 @@ void Widget::initializeMenusAndBars()
     menuBar->addMenu(windowMenu);
     QMenu* helpMenu = new QMenu("Yardım");
     menuBar->addMenu(helpMenu);
+//    QMenu* aboutMenu = new QMenu("Hakkında");   // burda credits bolumu ekleyip soyle de: Icon by ToZIcon on freeicons.io
+//    menuBar->addMenu(helpMenu);
 
     QAction* onTopAct = new QAction("Her zaman üstte", this);
     onTopAct->setCheckable(true);
