@@ -126,7 +126,7 @@ std::pair<QStringList, QStringListModel*> Widget::getFromFile(QFile& file, QStri
 	file.seek(0);
 	while (!file.atEnd())
 	{
-		QByteArray line = file.readLine();
+		const QByteArray line = file.readLine();
 		if (!line.isEmpty())
 			words << QString::fromUtf8(line.trimmed());
 	}
