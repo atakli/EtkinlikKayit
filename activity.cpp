@@ -89,6 +89,7 @@ void Activity::addActivity()
 	{
 		QMessageBox::warning(nullptr, appName, QString("Katılımcı seçmediniz!")); // TODO: kimse gelmedi butonu ekle
 	//	if (QMessageBox(QMessageBox::Question, appName, "Katılımcı seçmediniz! Kimse Gelmedi mi?", QMessageBox::Retry | QMessageBox::Apply).exec() == QMessageBox::Retry)
+		return;	// TODO: bu yokmus. unutmus muyum, yoksa bilerek mi bilmiyorum
 	}
 	auto etkinlikFile = openFile(etkinlikFileName + ".txt", QIODevice::ReadWrite);
 
