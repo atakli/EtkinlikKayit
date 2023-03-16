@@ -8,6 +8,7 @@ class QRadioButton;
 class QStringListModel;
 
 #include <QRadioButton>
+#include <QSqlDatabase>
 #include <QObject>
 #include <QFile>
 
@@ -16,6 +17,7 @@ class Activity : public QObject
     Q_OBJECT
 public:
 	Activity(Widget* widget, QObject *parent = nullptr);
+    ~Activity();
     void addToActivityListFile(QComboBox* comboBox);
 	std::unique_ptr<QFile> openFile(const QString &fileName, QIODevice::OpenModeFlag omf);
     void addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*> categories);
@@ -25,6 +27,8 @@ private:
 	Widget* widget;
 	QString punishedListFileNamePostFix = " Etkinliği Cezalı Listesi";
     QStringListModel* stringListModel;
+
+    QSqlDatabase db;
 
     void addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants);
     QStringList getLastThreeActivityDates(const QString& etkinlikFileName);

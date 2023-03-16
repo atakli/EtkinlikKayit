@@ -6,6 +6,7 @@
 #include <QListWidget>
 #include <QMessageBox>
 #include <QComboBox>
+#include <QSqlQuery>
 
 extern QString appName;
 
@@ -14,7 +15,29 @@ Activity::Activity(Widget* widget, QObject *parent) : QObject(parent),
 	participantListFile(openFile("katilimcilar.txt", QIODevice::ReadWrite)),
 	logFile(openFile("logs.txt", QIODevice::ReadWrite)),
 	widget(widget)
-{}
+{
+    db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName("etkinlikKayit.db");
+    if (!db.open())
+    {
+        qCritical() << "Failed to open database.";
+        return;
+    }
+    if (!db.tables().contains("mytable"))
+    {
+        QSqlQuery createQuery("CREATE TABLE mytable (id INTEGER PRIMARY KEY, name TEXT)");
+        if (!createQuery.exec())
+        {
+            qCritical() << "Failed to create table.";
+            return;
+        }
+    }
+}
+
+Activity::~Activity()
+{
+    db.close();
+}
 void Activity::addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants)
 {
 	auto etkinlikKatilimcilariFile = openFile(fileName + "_Participants.txt", QIODevice::ReadWrite);
