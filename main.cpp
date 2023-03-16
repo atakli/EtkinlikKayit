@@ -17,10 +17,12 @@ int main(int argc, char *argv[])
     if(!d.exists(saveDir))
     {
         if(!d.mkpath(saveDir))
+		{
             qDebug() << "klasor olusturulamadi";
-        else
-			QDir::setCurrent(saveDir);
+			return -1;
+		}
     }
+	QDir::setCurrent(saveDir);
 
     Widget w;
     w.show();

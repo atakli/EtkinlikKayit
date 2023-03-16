@@ -29,6 +29,7 @@ private:
     QStringListModel* stringListModel;
 
     QSqlDatabase db;
+	int createTable(const std::string& table);
 
     void addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants);
     QStringList getLastThreeActivityDates(const QString& etkinlikFileName);

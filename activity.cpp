@@ -7,6 +7,8 @@
 #include <QMessageBox>
 #include <QComboBox>
 #include <QSqlQuery>
+#include <QSqlError>
+#include <QDebug>
 
 extern QString appName;
 
@@ -14,21 +16,23 @@ Activity::Activity(Widget* widget, QObject *parent) : QObject(parent),
 	activityListFile(openFile("etkinlikler.txt", QIODevice::ReadWrite)),
 	participantListFile(openFile("katilimcilar.txt", QIODevice::ReadWrite)),
 	logFile(openFile("logs.txt", QIODevice::ReadWrite)),
-	widget(widget)
+	widget(widget),
+	db(QSqlDatabase::addDatabase("QSQLITE"))
 {
-    db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("etkinlikKayit.db");
     if (!db.open())
     {
         qCritical() << "Failed to open database.";
-        return;
-    }
-    if (!db.tables().contains("mytable"))
+		return;												// TODO: constructor'in icinde return etmek dogru mu?
+	}
+	const std::string table = "mytable13";
+	if (!db.tables().contains(table.c_str()))
     {
-        QSqlQuery createQuery("CREATE TABLE mytable (id INTEGER PRIMARY KEY, name TEXT)");
-        if (!createQuery.exec())
+		QSqlQuery query(db);
+		const std::string table_creation_query = "CREATE TABLE " + table + " (id INTEGER PRIMARY KEY, name TEXT)";
+		if (!query.exec(table_creation_query.c_str()))
         {
-            qCritical() << "Failed to create table.";
+			qCritical() << "Failed to create table:" << query.lastError().text();
             return;
         }
     }
