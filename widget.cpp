@@ -66,6 +66,8 @@ void Widget::startCompleter(QFile& file, QComboBox* comboBox)
     auto [stringList, stringListModel] = getFromFile(file, participantList);
     completer->setModel(stringListModel);
 
+    qDebug() << "stringList:" << stringList;
+
     comboBox->addItems(stringList);
 
     delete comboBox->completer();
@@ -135,6 +137,7 @@ std::pair<QStringList, QStringListModel*> Widget::getFromFile(QFile& file, QStri
 #endif
 
 	QStringListModel* stringListModel = new QStringListModel(words, completer);
+    qDebug() << "words:" << words;
 	QStringList stringList = stringListModel->stringList();
 	if (file.fileName() == activity->participantListFile->fileName())
 		participantList = stringList;
