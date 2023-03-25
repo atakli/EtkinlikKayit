@@ -1,5 +1,5 @@
-#include "activity.h"
 #include "ui_widget.h"
+#include "activity.h"
 #include "widget.h"
 
 #include <QTextStream>
@@ -16,32 +16,31 @@ Activity::Activity(Widget* widget, QObject *parent) : QObject(parent),
 	activityListFile(openFile("etkinlikler.txt", QIODevice::ReadWrite)),
 	participantListFile(openFile("katilimcilar.txt", QIODevice::ReadWrite)),
 	logFile(openFile("logs.txt", QIODevice::ReadWrite)),
-	widget(widget),
-	db(QSqlDatabase::addDatabase("QSQLITE"))
+    widget(widget)
 {
-    db.setDatabaseName("etkinlikKayit.db");
-    if (!db.open())
-    {
-        qCritical() << "Failed to open database.";
-		return;												// TODO: constructor'in icinde return etmek dogru mu?
-	}
-	const std::string table = "mytable13";
-	if (!db.tables().contains(table.c_str()))
-    {
-		QSqlQuery query(db);
-		const std::string table_creation_query = "CREATE TABLE " + table + " (id INTEGER PRIMARY KEY, name TEXT)";
-		if (!query.exec(table_creation_query.c_str()))
-        {
-			qCritical() << "Failed to create table:" << query.lastError().text();
-            return;
-        }
-    }
+//    db.createTable("katilimcilar (id INTEGER PRIMARY KEY, isim TEXT, soyisim TEXT, grup TEXT)");
+    db.createTable("katilimcilar (isim TEXT, soyisim TEXT, grup TEXT)");
+    db.insertValue("katilimcilar", {"'1emre'", "'6ataklı'", "'7genç'"});    // column name'leri optional imis
+    db.insertValue("katilimcilar", {"'2emre'", "'5ataklı'", "'8genç'"});    // column name'leri optional imis
+    db.insertValue("katilimcilar", {"'3emre'", "'4ataklı'", "'9genç'"});    // column name'leri optional imis
+//    db.insertValue("katilimcilar", "(isim, soyisim, grup) VALUES ('2emre', '5ataklı', '8genç')");    // column name'leri optional imis
+//    db.insertValue("katilimcilar", "(isim, soyisim, grup) VALUES ('3emre', '4ataklı', '9genç')");    // column name'leri optional imis
+//    qDebug() << "id:" << db.calculate_current_id();
+//    QSqlQuery query(db.getDataBase());
+
+//    if (!query.last()) {
+//        qDebug() << "Failed to move to last record!";
+//        return;
+//    }
+    const auto loadedJsonResult = db.calculate_current_id_of_table("katilimcilar");
+    if (loadedJsonResult.has_value())
+
+    qDebug() << "id:" << loadedJsonResult.value();
+//    qDebug() << "id:" << query.value("id").toInt();
+
+//    db.createTable("etkinlikler");
 }
 
-Activity::~Activity()
-{
-    db.close();
-}
 void Activity::addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants)
 {
 	auto etkinlikKatilimcilariFile = openFile(fileName + "_Participants.txt", QIODevice::ReadWrite);

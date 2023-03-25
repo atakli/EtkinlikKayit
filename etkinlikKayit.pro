@@ -6,7 +6,7 @@ unix{
     QMAKE_CXXFLAGS += -std=c++2a
 }
 win32{
-    CONFIG += c++20
+    QMAKE_CXXFLAGS_WARN_ON += /std:c++latest
 }
 
 #win32:CONFIG += c++20
@@ -22,12 +22,14 @@ win32{
 
 SOURCES += \
     activity.cpp \
+    database.cpp \
     main.cpp \
     participantswidget.cpp \
     widget.cpp
 
 HEADERS += \
     activity.h \
+    database.h \
     participantswidget.h \
     widget.h
 

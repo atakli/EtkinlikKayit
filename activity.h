@@ -12,12 +12,16 @@ class QStringListModel;
 #include <QObject>
 #include <QFile>
 
+#include "database.h"
+
+//const QString dbName = "bilgiYarismasi.db";
+const QString dbName = "etkinlikKayit.db";
+
 class Activity : public QObject
 {
     Q_OBJECT
 public:
 	Activity(Widget* widget, QObject *parent = nullptr);
-    ~Activity();
     void addToActivityListFile(QComboBox* comboBox);
 	std::unique_ptr<QFile> openFile(const QString &fileName, QIODevice::OpenModeFlag omf);
     void addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*> categories);
@@ -28,8 +32,7 @@ private:
 	QString punishedListFileNamePostFix = " Etkinliği Cezalı Listesi";
     QStringListModel* stringListModel;
 
-    QSqlDatabase db;
-	int createTable(const std::string& table);
+    DataBase db{dbName};
 
     void addActivityParticipant(const QString& fileName, const QStringList& selectedParticipants);
     QStringList getLastThreeActivityDates(const QString& etkinlikFileName);
