@@ -24,7 +24,8 @@ public:
 	Activity(Widget* widget, QObject *parent = nullptr);
     void addToActivityListFile(QComboBox* comboBox);
 	std::unique_ptr<QFile> openFile(const QString &fileName, QIODevice::OpenModeFlag omf);
-    void addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*> categories);
+    void addToParticipantListFile(QComboBox* comboBox, QComboBox* soyadComboBox, QList<QRadioButton*> categories);
+    DataBase& getDb();
 
 	std::unique_ptr<QFile> activityListFile, participantListFile, logFile;
 private:
@@ -38,7 +39,7 @@ private:
     QStringList getLastThreeActivityDates(const QString& etkinlikFileName);
 signals:
     void statusBarMessage(const QString& msg);
-    void addItemToParticipantsWidget(const QString& msg);
+    void addItemToParticipantsWidget(const Person&);
     void startCompleter(QFile& file, QComboBox* comboBox);
 public slots:
 	void openPunishedList();

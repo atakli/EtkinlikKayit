@@ -18,19 +18,20 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), activity{
 
     initializeMenusAndBars();
 
-	getFromFile(*activity->participantListFile, participantList);
-    participantsWidget = new ParticipantsWidget(&participantList);
+    getFromFile(*activity->participantListFile);
+    participantsWidget = new ParticipantsWidget(activity->getDb());
 
     update.setParameters("https://api.github.com/repos/atakli/EtkinlikKayit/releases/latest", appName, "etkinlikKayit.zip");
     update.isNewVersionAvailable();
 
     connect(ui->etkinlikEklePushButton, &QPushButton::clicked, this, [this]{activity->addToActivityListFile(ui->etkinlikComboBox);});
-    connect(ui->kisiEklePushButton, &QPushButton::clicked, this, [this]{activity->addToParticipantListFile(ui->adSoyadComboBox, ui->yasKategoriGroupBox->findChildren<QRadioButton*>());});
+    connect(ui->kisiEklePushButton, &QPushButton::clicked, this, [this]{activity->addToParticipantListFile(ui->adComboBox, ui->soyadComboBox, ui->yasKategoriGroupBox->findChildren<QRadioButton*>());});
 	connect(ui->katilimcilariGetirPushButton, &QPushButton::clicked, participantsWidget, &ParticipantsWidget::show);
 	connect(ui->punishedPushButton, &QPushButton::clicked, activity.get(), &Activity::openPunishedList);
 
     connect(activity.get(), &Activity::statusBarMessage, this, [this](const QString& msg){statusBar->showMessage(msg);});
-    connect(activity.get(), &Activity::addItemToParticipantsWidget, this, [this](const QString& msg){participantsWidget->addItem(msg);});
+//    connect(activity.get(), &Activity::addItemToParticipantsWidget, this, [this](const QString& msg){participantsWidget->addItem(msg);});
+    connect(activity.get(), &Activity::addItemToParticipantsWidget, this, [this](const Person& person){participantsWidget->addItem(person);});
     connect(activity.get(), &Activity::startCompleter, this, &Widget::startCompleter);
 	connect(ui->kaydetPushButton, &QPushButton::clicked, activity.get(), &Activity::addActivity);
 
@@ -42,13 +43,13 @@ Widget::Widget(QWidget *parent) : QWidget(parent), ui(new Ui::Widget), activity{
     ui->dateEdit->setDate(QDateTime::currentDateTime().date());
 
     ui->etkinlikComboBox->setCompleter(nullptr);    // nullptr yapmamın sebebi startCompleter'ın içinde delete edebilmek
-    ui->adSoyadComboBox->setCompleter(nullptr);
+    ui->adComboBox->setCompleter(nullptr);
 
 	startCompleter(*activity->activityListFile, ui->etkinlikComboBox);
-	startCompleter(*activity->participantListFile, ui->adSoyadComboBox);
+    startCompleter(*activity->participantListFile, ui->adComboBox);
 
     ui->etkinlikComboBox->setCurrentIndex(-1);
-    ui->adSoyadComboBox->setCurrentIndex(-1);
+    ui->adComboBox->setCurrentIndex(-1);
 }
 Widget::~Widget()
 {
@@ -63,7 +64,7 @@ void Widget::startCompleter(QFile& file, QComboBox* comboBox)
     completer->setMaxVisibleItems(10);
     completer->setWrapAround(true);     // bunun ne işe yaradığını anlamadım
 
-    auto [stringList, stringListModel] = getFromFile(file, participantList);
+    auto [stringList, stringListModel] = getFromFile(file);
     completer->setModel(stringListModel);
 
     qDebug() << "stringList:" << stringList;
@@ -119,7 +120,7 @@ void Widget::onTopAction()				// TODO: linux'ta bunda sıkıntı var. sadece bir
     show();
 }
 
-std::pair<QStringList, QStringListModel*> Widget::getFromFile(QFile& file, QStringList& participantList)
+std::pair<QStringList, QStringListModel*> Widget::getFromFile(QFile& file)
 {
 #ifndef QT_NO_CURSOR
 	QGuiApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
@@ -135,10 +136,8 @@ std::pair<QStringList, QStringListModel*> Widget::getFromFile(QFile& file, QStri
 #ifndef QT_NO_CURSOR
 	QGuiApplication::restoreOverrideCursor();
 #endif
-
 	QStringListModel* stringListModel = new QStringListModel(words, completer);
-    qDebug() << "words:" << words;
-	QStringList stringList = stringListModel->stringList();
+    const QStringList stringList = stringListModel->stringList();
 	if (file.fileName() == activity->participantListFile->fileName())
 		participantList = stringList;
 	participantList.sort(Qt::CaseInsensitive);

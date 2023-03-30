@@ -5,17 +5,19 @@
 
 namespace Ui { class Form; }
 
+#include "database.h"
+
 class ParticipantsWidget : public QWidget
 {
     Q_OBJECT
 public:
-    ParticipantsWidget(QStringList* participantList, QWidget* parent = nullptr);
-    void addItem(const QString& participant);
+    ParticipantsWidget(DataBase& db, QWidget* parent = nullptr);
     std::vector<int> getSelectedParticipants();
+    void addItem(const Person& person);
 private:
     int rowIndex = 0;
     Ui::Form *ui;
-	QStringList* participantList;
+    QVector<Person> participantList;
 signals:
     void participantListUpdated();
 };

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>448</width>
+    <width>604</width>
     <height>224</height>
    </rect>
   </property>
@@ -58,12 +58,12 @@
           </size>
          </property>
          <property name="text">
-          <string>Ad Soyad</string>
+          <string>Ad </string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="adSoyadComboBox">
+        <widget class="QComboBox" name="adComboBox">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -75,6 +75,26 @@
          </property>
          <property name="insertPolicy">
           <enum>QComboBox::InsertAtBottom</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="soyadLabel">
+         <property name="text">
+          <string>Soyad</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="soyadComboBox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="editable">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

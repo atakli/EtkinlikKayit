@@ -1,7 +1,5 @@
 #include "database.h"
 
-#include <expected>
-
 DataBase::DataBase(const QString &dbName) : db(QSqlDatabase::addDatabase("QSQLITE"))
 {
     db.setDatabaseName(dbName);
@@ -17,7 +15,7 @@ DataBase::~DataBase()
     db.close();
 }
 
-QSqlDatabase& DataBase::getDataBase()
+QSqlDatabase DataBase::getDataBase() const
 {
     return db;
 }
@@ -56,7 +54,7 @@ ReturnSuccess DataBase::insertValue(const QString& table, const QStringList& val
     {
         QStringList entry;
         for (int i = 0; i < values.size(); ++i)
-            query.value(i).toString();
+            entry += query.value(i).toString();
         if (entry.join(", ") == insertQuery)
             return SameEntryExists;
     }
@@ -69,23 +67,18 @@ ReturnSuccess DataBase::insertValue(const QString& table, const QStringList& val
     return GoodInsertion;
 }
 
-std::expected<int, ReturnSuccess> DataBase::calculate_current_id_of_table(const QString& table)
+int DataBase::calculate_current_id_of_table(const QString& table) const
 {
-//    Query query;
     QSqlQuery query(db);
-//    if (!query.exec("select question from yarisma where rowid = 1"))    // 0 yok. 1'den basliyor
     if (!query.exec("select max(rowid) from " + table))    // 0 yok. 1'den basliyor
     {
         qCritical() << "Failed to query max rowid:" << query.lastError().text();
-        return std::unexpected {RowIdQueryFailed};
+        return RowIdQueryFailed;
     }
     if (query.next())
     {
         return query.value(0).toInt();
     }
-    return std::unexpected {NoEntry};
-//    return query.value("id").toInt();
-//    return query.record()
-//    return query.at()
-//    return query.next()
+    qDebug() << "No Entry";
+    return NoEntry;
 }

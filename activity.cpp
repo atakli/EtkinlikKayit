@@ -20,11 +20,8 @@ Activity::Activity(Widget* widget, QObject *parent) : QObject(parent),
 {
 //    db.createTable("katilimcilar (id INTEGER PRIMARY KEY, isim TEXT, soyisim TEXT, grup TEXT)");
     db.createTable("katilimcilar (isim TEXT, soyisim TEXT, grup TEXT)");
-    db.insertValue("katilimcilar", {"'1emre'", "'6ataklı'", "'7genç'"});    // column name'leri optional imis
-    db.insertValue("katilimcilar", {"'2emre'", "'5ataklı'", "'8genç'"});    // column name'leri optional imis
-    db.insertValue("katilimcilar", {"'3emre'", "'4ataklı'", "'9genç'"});    // column name'leri optional imis
+//    db.insertValue("katilimcilar", {"'1emre'", "'6ataklı'", "'7genç'"});    // column name'leri optional imis
 //    db.insertValue("katilimcilar", "(isim, soyisim, grup) VALUES ('2emre', '5ataklı', '8genç')");    // column name'leri optional imis
-//    db.insertValue("katilimcilar", "(isim, soyisim, grup) VALUES ('3emre', '4ataklı', '9genç')");    // column name'leri optional imis
 //    qDebug() << "id:" << db.calculate_current_id();
 //    QSqlQuery query(db.getDataBase());
 
@@ -32,11 +29,10 @@ Activity::Activity(Widget* widget, QObject *parent) : QObject(parent),
 //        qDebug() << "Failed to move to last record!";
 //        return;
 //    }
-    const auto loadedJsonResult = db.calculate_current_id_of_table("katilimcilar");
-    if (loadedJsonResult.has_value())
-
-    qDebug() << "id:" << loadedJsonResult.value();
-//    qDebug() << "id:" << query.value("id").toInt();
+    int cellCount = 0;
+    const auto id = db.calculate_current_id_of_table("katilimcilar");
+    if (id != RowIdQueryFailed && id != NoEntry)
+        cellCount = id;
 
 //    db.createTable("etkinlikler");
 }
@@ -137,41 +133,47 @@ void Activity::addActivity()
 	stream.flush();
     emit statusBarMessage(QString("Seçili kişi(ler) \"%1\" etkinliğine kaydedildi").arg(etkinlikFileName));
 }
-void Activity::addToParticipantListFile(QComboBox* comboBox, QList<QRadioButton*> categories)
+void Activity::addToParticipantListFile(QComboBox* comboBox, QComboBox* soyadComboBox, QList<QRadioButton*> categories)
 {
 	QTextStream stream(participantListFile.get());
 
 	const auto checkedButtonIter = std::find_if(std::cbegin(categories), std::cend(categories), [](const auto&button){return button->isChecked();});
-    /*Warns when a lambda inside a connect() captures local variables by reference.
-    Example:
-    int a;
-    connect(obj, &MyObj::mySignal, [&a] { ... });
-    This usually results in a crash since the lambda might get called after the captured variable went out of scope.*/
-    QRadioButton* checkedButton = *checkedButtonIter;
-    if(comboBox->currentText().isEmpty())
+
+    if(comboBox->currentText().isEmpty() || soyadComboBox->currentText().isEmpty())
     {
-		QMessageBox::warning(nullptr, appName, "Kişi ismi girilmemiş!");
+        QMessageBox::warning(nullptr, appName, "Kişi ismi veya soyismi girilmemiş!");
         return;
     }
-    else if (checkedButtonIter == categories.cend())
+    if (checkedButtonIter == categories.cend())
     {
 		QMessageBox::warning(nullptr, appName, QString("%1 için yaş kategorisi seçilmemiş!").arg(comboBox->currentText()));
         return;
     }
+    QRadioButton* checkedButton = *checkedButtonIter;
+    const Person person = {comboBox->currentText(), soyadComboBox->currentText(), checkedButton->text()};
 
-	emit statusBarMessage(QString("\"%1\" kategorisindeki \"%2\" kaydedildi").arg(checkedButton->text(), comboBox->currentText()));
-    stream << comboBox->currentText() << " (" << checkedButton->text() << ")\n";
+    emit statusBarMessage(QString("\"%1\" kategorisindeki \"%2\" \"%3\" kaydedildi").arg(person.group, person.name, person.surname));
+    stream << comboBox->currentText() << " (" << person.group << ")\n";
+
+    auto f = [](QString str){str.push_back('\''); str.push_front('\''); return str;};  //100540.99
+
+    db.insertValue("katilimcilar", {f(person.group), f(person.name), f(person.surname)});
 
     checkedButton->setAutoExclusive(false);
     checkedButton->setChecked(false);
     checkedButton->setAutoExclusive(true);
 
-    emit addItemToParticipantsWidget(comboBox->currentText() + " (" + checkedButton->text() + ")");
+    emit addItemToParticipantsWidget(person);
 
     stream.flush();
 	emit startCompleter(*participantListFile, comboBox);
 
-	comboBox->clearEditText();
+    comboBox->clearEditText();
+}
+
+DataBase &Activity::getDb()
+{
+    return db;
 }
 
 void Activity::openPunishedList()
