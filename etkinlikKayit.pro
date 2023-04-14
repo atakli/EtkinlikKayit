@@ -43,9 +43,9 @@ CONFIG(release, debug|release): LIBS += -L"C:\\Users\\Emre ATAKLI\\Documents\\qt
 else:CONFIG(debug, debug|release): LIBS += -L"C:\\Users\\Emre ATAKLI\\Documents\\qt\\UpdateController\\build-UpdateController-Desktop_Qt_6_4_1_MSVC2019_64bit-Debug\\debug\\static" -lupdatecontroller
 }
 unix{
-INCLUDEPATH += /home/b720/qt-projects/UpdateController/include
-CONFIG(debug, debug|release): LIBS += -L/home/b720/qt-projects/UpdateController/build-UpdateController-Desktop_Qt_5_14_2_GCC_64bit-Debug/debug/static -lUpdateController
-else:CONFIG(release, debug|release): LIBS += -L/home/b720/qt-projects/UpdateController/build-UpdateController-Desktop_Qt_5_14_2_GCC_64bit-Release/release/static -lUpdateController
+INCLUDEPATH += /home/emre/qtprojects/UpdateController/include
+CONFIG(debug, debug|release): LIBS += -L/home/emre/qtprojects/UpdateController/build-UpdateController-Desktop_Qt_6_4_3_GCC_64bit-Debug/debug/static -lUpdateController
+else:CONFIG(release, debug|release): LIBS += -L/home/b720/qtprojects/UpdateController/build-UpdateController-Desktop_Qt_6_4_3_GCC_64bit-Release/release/static -lUpdateController
 }
 
 # Default rules for deployment.
