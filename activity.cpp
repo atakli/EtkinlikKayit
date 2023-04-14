@@ -12,6 +12,22 @@
 
 extern QString appName;
 
+class MyQWidget : public QWidget
+{
+public:
+    void closeEvent(QCloseEvent*)
+    {
+        for (auto item : items)
+            delete item;
+    }
+    void addItem(QListWidgetItem* item)
+    {
+        items.push_back(item);
+    }
+private:
+    std::vector<QListWidgetItem*> items;
+};
+
 Activity::Activity(Widget* widget, QObject *parent) : QObject(parent),
 	activityListFile(openFile("etkinlikler.txt", QIODevice::ReadWrite)),
 	participantListFile(openFile("katilimcilar.txt", QIODevice::ReadWrite)),
@@ -201,7 +217,7 @@ void Activity::openPunishedList()
 			const QString line = participantsToBePunishedFile->readLine();
 			if (!line.isEmpty())
 			{
-				participantsToBePunished << line.trimmed();
+                participantsToBePunished << line.trimmed();         // buraya trimleyip koymusum, dikkat et sonra uyumsuzluk olmasin
 			}
 		}
 		return participantsToBePunished;
@@ -212,7 +228,7 @@ void Activity::openPunishedList()
 		return;
 	}
 
-	QWidget *layoutWidget = new QWidget();
+    MyQWidget *layoutWidget = new MyQWidget();
 	layoutWidget->setObjectName(QString::fromUtf8("layoutWidget"));
 	layoutWidget->setWindowTitle(activityName);
 
@@ -228,7 +244,7 @@ void Activity::openPunishedList()
 	QListWidget *listWidget = new QListWidget(layoutWidget);
 	for (const QString& participant : participantsToBePunished)
 	{
-		new QListWidgetItem(participant, listWidget);
+        layoutWidget->addItem(new QListWidgetItem(participant, listWidget));
 	}
 
 	QVBoxLayout *verticalLayout = new QVBoxLayout();
